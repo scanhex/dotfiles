@@ -90,7 +90,7 @@ set autoread
 set autoindent
 set history=1000
 set smartindent
-set guifont=Menlo\ Regular:h18
+set guifont=Jetbrains\ Mono\ Regular:h14
 "set autochdir
 set noswapfile
 set splitright
@@ -103,7 +103,13 @@ autocmd FileType sh setlocal makeprg=./%
 autocmd FileType crystal setlocal makeprg=crystal\ %
 autocmd FileType d setlocal makeprg=ldc2\ %
 autocmd FileType kotlin setlocal makeprg=kotlinc\ %
+au GUIEnter * simalt ~x
+
+source $VIMRUNTIME/mswin.vim
+behave mswin
+
 "autocmd FocusLost :wa
+"
 "autocmd CursorHold * smile
 "filetype plugin on 
 "au FileType cpp setl ofu=ccomplete#CompleteCpp
