@@ -90,7 +90,11 @@ set autoread
 set autoindent
 set history=1000
 set smartindent
-set guifont=Jetbrains\ Mono\ Regular:h14
+if has('win32')
+	set guifont=Jetbrains\ Mono\ Regular:h14
+else
+	set guifont=Jetbrains\ Mono\ 14
+endif
 "set autochdir
 set noswapfile
 set splitright
@@ -103,7 +107,9 @@ autocmd FileType sh setlocal makeprg=./%
 autocmd FileType crystal setlocal makeprg=crystal\ %
 autocmd FileType d setlocal makeprg=ldc2\ %
 autocmd FileType kotlin setlocal makeprg=kotlinc\ %
-au GUIEnter * simalt ~x
+if has('win32')
+	au GUIEnter * simalt ~x
+endif
 
 source $VIMRUNTIME/mswin.vim
 behave mswin
