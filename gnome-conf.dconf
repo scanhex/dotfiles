@@ -40,6 +40,10 @@ gap-outer=uint32 1
 show-title=false
 tile-by-default=true
 
+
+[shell/extensions/auto-move-windows]
+application-list=['org.wezfurlong.wezterm.desktop:1', 'google-chrome-beta.desktop:2', 'telegram-desktop_telegram-desktop.desktop:3', 'gvim.desktop:4', 'jetbrains-idea.desktop:5', 'clion_clion.desktop:5', 'jetbrains-clion.desktop:5', 'code_code.desktop:4']
+
 [shell/keybindings]
 switch-to-application-1=@as []
 switch-to-application-2=@as []
