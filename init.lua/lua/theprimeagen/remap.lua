@@ -77,7 +77,7 @@ function openCorrespondingTest(current_dir, file_name_without_extension)
 end
 function openCorrespondingSource(current_dir, file_name_without_extension)
     local file_name_without_test_suffix = file_name_without_extension:gsub('_test$', '')
-    local source_file_path = current_dir .. '/../' .. file_name_without_test_suffix .. '.cpp'
+    local source_file_path = current_dir:gsub('/tests$', '/') .. file_name_without_test_suffix .. '.cpp'
     vim.cmd('edit ' .. source_file_path)
 end
 function openCorrespondingTestOrSource()
