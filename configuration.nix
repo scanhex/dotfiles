@@ -7,12 +7,14 @@
 
 { config, lib, pkgs, ... }:
 
+let 
+	NixOS-WSL = fetchGit {
+		url = "https://github.com/nix-community/NixOS-WSL/";
+		rev = "aef95bdb6800a3a2af7aa7083d6df03067da6592";
+	}; 
+in
 {
-  imports = [
-    # include NixOS-WSL modules
-    <nixos-wsl/modules>
-  ];
-
+	imports = [ (NixOS-WSL + "/modules") ];
   wsl.enable = true;
   wsl.defaultUser = "nixos";
 
