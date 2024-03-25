@@ -25,10 +25,13 @@
   };
 
   environment.systemPackages = with pkgs; [
+		vim
     binutils
     tree
     file
     wget
     nix-bash-completions
   ];
+
+	system.stateVersion = "23.11";
 }
