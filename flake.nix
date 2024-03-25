@@ -5,6 +5,11 @@
 		nixpkgs = {
 			url = "github:NixOS/nixpkgs/nixos-23.11";
 		};
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    nixos-wsl = {
+      url = "github:nix-community/NixOS-WSL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 	};
 
 	outputs = inputs@{ self, nixpkgs, flake-parts, ... }:
