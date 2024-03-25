@@ -7,19 +7,17 @@
 		};
 	};
 
-	outputs = { self, nixpkgs, ... }:
-		let 
-			lib = nixpkgs.lib;
-		in {
-			nixosConfigurations = {
-				nixos = lib.nixosSystem {
-					system = "x86_64-linux";
-					modules = [ 
-						./configuration.nix
-						./home-manager/hm-standalone.nix
-					];
-				};
-			};
+	outputs = inputs@{ self, nixpkgs, flake-parts, ... }:
+		flake-parts.lib.mkFlake { inherit inputs; } {
+			systems = [
+				"x86_64-linux"
+				"aarch64-linux"
+			];
 
+			imports = [
+				./nixos
+				./home-manager/hm-standalone.nix
+				./hosts
+			];
 		};
 }
