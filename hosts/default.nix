@@ -22,7 +22,7 @@
 # nixos setup
 			{ networking.hostName = "${hostname}"; }
 # disko module
-		inputs.disko.nixosModules.disko
+#		inputs.disko.nixosModules.disko
 			]
 			++ nixpkgs.lib.optionals hmEnable [
 # home-manager module
