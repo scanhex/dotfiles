@@ -24,6 +24,8 @@
     # docker-desktop.enable = true;
   };
 
+	users.users.${username}.shell = pkgs.zsh;
+
   environment.systemPackages = with pkgs; [
 		vim
     binutils
