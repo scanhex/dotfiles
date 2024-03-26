@@ -3,6 +3,7 @@
   imports =
     [
       ./git.nix
+			./alias.nix
     ]
     ++ lib.optionals nixosConfig.services.xserver.enable [
     ];

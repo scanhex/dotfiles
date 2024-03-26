@@ -31,6 +31,7 @@
     file
     wget
     nix-bash-completions
+		python3
   ];
 
 	system.stateVersion = "23.11";
