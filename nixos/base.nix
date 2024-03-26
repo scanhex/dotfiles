@@ -7,6 +7,8 @@
 {
   environment.systemPackages = [ pkgs.vim pkgs.git ];
 
+	programs.zsh.enable = true; # It's important to do it here because home-manager can't do it 
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It's perfectly fine and recommended to leave

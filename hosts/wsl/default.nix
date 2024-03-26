@@ -24,6 +24,7 @@
     # docker-desktop.enable = true;
   };
 
+	programs.zsh.enable = true;
 	users.users.${username}.shell = pkgs.zsh;
 
   environment.systemPackages = with pkgs; [
