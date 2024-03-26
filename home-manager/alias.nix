@@ -2,5 +2,5 @@
 {
   home.shellAliases = {
 		g = "git";
-	}
+	};
 }

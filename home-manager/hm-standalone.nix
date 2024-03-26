@@ -22,6 +22,7 @@
 					};
 
 					modules = [ 
+						./alias.nix
 						./git.nix
 					] ++ extraModules;
 				};
