@@ -32,11 +32,11 @@
 	users.users.${username}.shell = pkgs.zsh;
 
   environment.systemPackages = with pkgs; [
-		neovim
     binutils
     tree
     file
     wget
+    vim
   ];
 
 	system.stateVersion = "23.11";
