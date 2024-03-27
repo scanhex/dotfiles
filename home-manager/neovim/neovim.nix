@@ -83,4 +83,6 @@ in
       };
     in
       "${parsers}/parser";
+
+    xdg.configFile."nvim/lua".source = ./lua;
 }
