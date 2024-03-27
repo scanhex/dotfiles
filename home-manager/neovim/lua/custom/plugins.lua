@@ -1,5 +1,10 @@
 return {
-  {"github/copilot.vim"},
+  {"github/copilot.vim",
+    cmd = "Copilot",
+    event = "InsertEnter"
+  },
+}
+--[[
   {
     "neovim/nvim-lspconfig",
 
@@ -107,3 +112,4 @@ return {
     ft = "csv",
   },
 }
+--]]
