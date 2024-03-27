@@ -23,7 +23,7 @@ let
 		nvim-colorizer-lua
 		nvim-lspconfig
 		nvim-tree-lua
-		nvim-treesitter
+		(nvim-treesitter.withPlugins (p: [p.cpp p.lua p.python p.nix]))
 		nvim-web-devicons
 		nvterm
 		telescope-fzf-native-nvim
@@ -56,7 +56,6 @@ in
 		{
 			enable = true;
 			extraPackages = with pkgs; [
-# telescope-nvim
 				ripgrep
 			];
 			plugins = with pkgs.vimPlugins; [
@@ -68,4 +67,18 @@ in
 				dofile("${nvchad}/init.lua")
 				'';
 		};
+    xdg.configFile."nvim/parser".source =
+      let
+      treesitterParsers = (pkgs.vimPlugins.nvim-treesitter.withPlugins (plugins: with plugins; [
+            cpp
+            lua
+            nix
+            yaml
+      ])).dependencies;
+      parsers = pkgs.symlinkJoin {
+        name = "treesitter-parsers";
+        paths = treesitterParsers;
+      };
+    in
+      "${parsers}/parser";
 }
