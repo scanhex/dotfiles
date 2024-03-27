@@ -3,6 +3,7 @@
   imports =
     [
       ./git.nix
+      ./neovim.nix
 			./alias.nix
     ];
 

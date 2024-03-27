@@ -7,6 +7,10 @@
       # GUI
       kitty
       goodvibes
+			nixd
+			nix-bash-completions
+			python311
+			python311Packages.requests
       # emacs29-pgtk
     ];
   };
@@ -28,13 +32,11 @@
 	users.users.${username}.shell = pkgs.zsh;
 
   environment.systemPackages = with pkgs; [
-		vim
+		neovim
     binutils
     tree
     file
     wget
-    nix-bash-completions
-		python3
   ];
 
 	system.stateVersion = "23.11";
