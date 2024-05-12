@@ -1,0 +1,31 @@
+return {{
+    "SantinoKeupp/telescope-cmake4vim.nvim"
+}, {
+	"ilyachur/cmake4vim", 
+  init = function()
+    vim.g.cmake_build_path_pattern = {"build/%s", "'linux-gnu.release'"}
+    -- vim.g.cmake_project_generator = "Ninja"
+    -- vim.g.cmake_usr_args = "-G \"Ninja\""
+    vim.g.cmake_kits = {gcc = {generator="Ninja", cmake_build_args="--parallel 24"}}
+    vim.g.cmake_selected_kit = "gcc"
+
+    local common_cmake_args = "-j32 --output-on-failure --progress"
+
+    _G.buildAndLightTest = function()
+      local build_dir = vim.fn["utils#cmake#findBuildDir"]()
+      vim.g.cmake_ctest_args = common_cmake_args .. "-j32 --label-regex light --build-generator Ninja --build-and-test " .. vim.fn.getcwd() .. " " .. build_dir
+      vim.cmd("CTest")
+    end
+
+    _G.buildAndHeavyTest = function()
+      vim.g.cmake_ctest_args = common_cmake_args .. " --label-regex heavy"
+      vim.cmd("CTest")
+    end
+  end,
+  keys = {
+    { '<leader>oc', '<cmd>CMakeRun<CR>', { noremap = true, silent = true } },
+    { '<leader>ot', '<cmd>lua buildAndLightTest()<CR>', { noremap = true, silent = false } },
+    { '<leader>oT', '<cmd>lua buildAndHeavyTest()<CR>', { noremap = true, silent = true } },
+    { '<leader>os', '<cmd>Telescope cmake4vim select_target<CR>', { noremap = true, silent = true } },
+  },
+}}

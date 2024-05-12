@@ -17,7 +17,7 @@ let
 																						};
 																						}))
 	luasnip
-		nvchad-ui
+		#nvchad-ui
 		nvim-autopairs
 		nvim-cmp
 		nvim-colorizer-lua
@@ -59,15 +59,17 @@ in
 			enable = true;
 			extraPackages = with pkgs; [
 				ripgrep
+        nixd
+        clang
 			];
 			plugins = with pkgs.vimPlugins; [
-				base46
-					lazy-nvim
-					nvchad
+        #base46
+          lazy-nvim
+					#nvchad
 			];
-			extraLuaConfig = ''
-				dofile("${nvchad}/init.lua")
-				'';
+#			extraLuaConfig = ''
+#				dofile("${nvchad}/init.lua")
+#				'';
 		};
     xdg.configFile."nvim/parser".source =
       let
