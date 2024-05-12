@@ -12,8 +12,8 @@ in
       goodvibes
 			nixd
 			nix-bash-completions
-			python310
-			python310Packages.pip
+      pythonEnv
+			micromamba
       # emacs29-pgtk
     ];
   };
