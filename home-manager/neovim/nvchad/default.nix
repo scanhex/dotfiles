@@ -29,7 +29,6 @@ let
 		telescope-fzf-native-nvim
 		telescope-nvim
 		which-key-nvim
-
     copilot-vim
 		];
 in

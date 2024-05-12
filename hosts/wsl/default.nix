@@ -1,4 +1,7 @@
 { pkgs, username, ... }:
+let 
+pythonEnv = pkgs.python311.withPackages (ps: [ ps.numpy ps.pandas ps.requests ]);
+in 
 {
   home-manager.users.${username} = {
     home.packages = with pkgs; [
@@ -9,8 +12,8 @@
       goodvibes
 			nixd
 			nix-bash-completions
-			python311
-			python311Packages.requests
+			python310
+			python310Packages.pip
       # emacs29-pgtk
     ];
   };
