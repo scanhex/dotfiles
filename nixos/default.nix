@@ -1,10 +1,6 @@
 {
-	flake.nixosModules = {
-		default = {
-			imports = [ 
-				./base.nix
-				./nixconfig.nix
-			];
-		};
-	};
+    imports = [ 
+        ./base.nix
+        ./nixconfig.nix
+    ];
 }

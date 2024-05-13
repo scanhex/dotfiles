@@ -44,7 +44,9 @@ let
 						users.${username} = import ../home-manager/home.nix;
 					};
 				}
-			] ++ modules;
+      ../nixos
+			] 
+            ++ modules;
     });
 in
 {
