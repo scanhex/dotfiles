@@ -13,9 +13,9 @@
         };
     };
     config = {
-        programs.bash.bashrcExtra = config.my.bash.bashrcPrefix + builtins.readFile ./bashrc-base.bash + config.my.bash.bashrcSuffix;
+        programs.bash.bashrcExtra = config.my.bash.bashrcPrefix + (import ./bashrc-base.nix).bashrcBase + config.my.bash.bashrcSuffix;
         programs.bash.enable = true; # otherwise bashrcExtra/shellAliases wouldn't work 
-        programs.zsh.enable = true;
+        #programs.zsh.enable = true;
         home.shellAliases = {
             mm = "micromamba";
             cp="cp -i";

@@ -31,8 +31,8 @@ in
     # docker-desktop.enable = true;
   };
 
-	programs.zsh.enable = true;
-	users.users.${username}.shell = pkgs.zsh;
+  programs.zsh.enable = true;
+  users.users.${username}.shell = pkgs.bash;
 
   environment.systemPackages = with pkgs; [
     binutils
