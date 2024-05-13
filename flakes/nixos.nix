@@ -2,12 +2,15 @@
 
 let
   mkNixos =
-    { system ? "x86_64-linux"
-    , nixpkgs ? self.inputs.nixpkgs
-    , config ? { }
-    , overlays ? [ ]
-    , modules ? [ ]
-    }:
+    { 
+			hostname,
+			username,
+			system ? "x86_64-linux",
+			nixpkgs ? self.inputs.nixpkgs,
+			config ? { },
+			overlays ? [ ],
+			modules ? [ ]
+		}:
     withSystem system ({ lib, pkgs, system, ... }:
     let
       customPkgs = import nixpkgs (lib.recursiveUpdate
@@ -24,19 +27,34 @@ let
     nixpkgs.lib.nixosSystem {
       inherit system;
       specialArgs = {
-        inherit lib;
+        inherit lib username;
         inputs = self.inputs;
         pkgs = if (nixpkgs != self.inputs.nixpkgs || config != { } || overlays != [ ]) then customPkgs else pkgs;
       };
       modules = [
-        ../nixos
-      ] ++ modules;
+				self.inputs.home-manager.nixosModules.home-manager
+				{
+					home-manager = {
+						useGlobalPkgs = true;
+						useUserPackages = true;
+						backupFileExtension = "hm_bak~";
+						extraSpecialArgs = {
+							inputs = self.inputs;
+						};
+						users.${username} = import ../home-manager/home.nix;
+					};
+				}
+			] ++ modules;
     });
 in
 {
   flake.nixosConfigurations = {
     wsl = mkNixos {
-      modules = [ ../hosts/wsl.nix ];
+			username = "nixos";
+			hostname = "nixos";
+      modules = [ ../hosts/wsl
+								self.inputs.nixos-wsl.nixosModules.wsl
+			];
     };
   };
 }
