@@ -46,6 +46,7 @@ in
 		extraPackages = with pkgs; [
 			ripgrep
             clang
+            pyright
             lua-language-server
             nil
             neocmakelsp

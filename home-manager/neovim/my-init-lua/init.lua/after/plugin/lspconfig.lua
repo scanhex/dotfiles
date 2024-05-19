@@ -20,6 +20,9 @@ return {
                 capabilities = capabilities,
                 cmd = { os.getenv('HOME') .. "/.nix-profile/bin/clangd", "--offset-encoding=utf-16", "-j=4" },
             }
+            require('lspconfig').pyright.setup {
+                capabilities = capabilities
+            }
             require('lspconfig').lua_ls.setup {
                 capabilities = capabilities
             }
