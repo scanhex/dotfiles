@@ -5,9 +5,9 @@ return {
     "nvim-telescope/telescope.nvim",
     dependencies = {
         "nvim-lua/plenary.nvim",
-        "nvim-telescope/telescope-file-browser.nvim"
+        "scanhex/telescope-file-browser.nvim",
     },
-    init = function()
+    config = function()
         local telescope = require('telescope')
         local actions = require('telescope.actions')
         local builtin = require('telescope.builtin')
@@ -52,7 +52,7 @@ return {
             },
         })
 
-        telescope.load_extension("file_browser")
+        --telescope.load_extension("file_browser")
         --telescope.load_extension('rooter')
         --telescope.load_extension('cmake4vim')
     end,

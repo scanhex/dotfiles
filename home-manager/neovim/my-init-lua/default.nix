@@ -18,7 +18,7 @@ let
         plenary-nvim
 		telescope-fzf-native-nvim
 		telescope-nvim
-		telescope-file-browser-nvim
+		#telescope-file-browser-nvim - I'm using my own fork
 
         bigfile-nvim
 		copilot-vim
