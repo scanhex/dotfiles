@@ -94,6 +94,7 @@ in
             nix
             yaml
             python
+            html
       ])).dependencies;
       parsers = pkgs.symlinkJoin {
         name = "treesitter-parsers";
