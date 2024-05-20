@@ -52,7 +52,7 @@ return {
             },
         })
 
-        --telescope.load_extension("file_browser")
+        telescope.load_extension("file_browser")
         --telescope.load_extension('rooter')
         --telescope.load_extension('cmake4vim')
     end,
