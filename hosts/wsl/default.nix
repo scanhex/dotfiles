@@ -23,6 +23,7 @@ in
     defaultUser = "${username}";
     startMenuLaunchers = true;
     nativeSystemd = true;
+    interop.includePath = false;
 
     # Enable native Docker support
     # docker-native.enable = true;
