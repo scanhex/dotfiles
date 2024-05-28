@@ -30,6 +30,8 @@ let
         harpoon
         gitsigns-nvim
         diffview-nvim
+        lazygit-nvim
+        nvim-surround
         #cmake-tools-nvim - add when it's out of unstable
 		];
 mkEntryFromDrv = drv:
@@ -51,6 +53,7 @@ in
             nil
             neocmakelsp
             pkgs.rust-analyzer
+            lazygit
 		];
 		plugins = with pkgs.vimPlugins; [
 			lazy-nvim
