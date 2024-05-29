@@ -1,9 +1,9 @@
 # dotfiles
 ## Installation option 1
 1. Install nix and nix-instantiate automatically via `bash <(curl -L https://nixos.org/nix/install) --no-daemon`
-2. Run `nix build .#init-home`
+2. Run `nix build .#homeConfigurations.amorozov.activationPackage` (Use `export NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt` for SSL cert issues)
 3. Run `nix-env --uninstall nix` (because it would conflict with this flake's nix)
-4. Run `./result/activate`
+4. Run `./result/activate` (might want to set XDG_STATE_HOME to store profiles not in ~/.local)
 ## Installation option 2
 1. Download statically built nix binary, 
 2. Via nix, make commands like nix-instantiate available
