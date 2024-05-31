@@ -26,11 +26,19 @@ in
 	];
 
     programs.fzf.enable = true;
+    xdg.enable = true;
+    nix = { 
+        enable = true;
+        settings = {
+            use-xdg-base-directories = true;
+            experimental-features = [ "nix-command" "flakes" ];
+        };
+    };
 
 	home.shellAliases = {
 		python3 = "LD_PRELOAD=${nix-user-chroot-patch}/lib/nix-user-chroot-patch.so python3";
 		g = "LD_PRELOAD=${nix-user-chroot-patch}/lib/nix-user-chroot-patch.so git";
 	};
 
-    home.stateVersion = "23.11";
+    home.stateVersion = "23.11"; # Shouldn't need to change this most of the time
 }

@@ -1,3 +1,4 @@
+{config, ...}:
 {
     bashrcBase = '' 
 if [ -f /etc/bashrc ]; then
@@ -6,9 +7,7 @@ fi
 if [ -f ~/.profile ]; then
     . ~/.profile
 fi
-if [ -f ~/.nix-profile/etc/profile.d/nix.sh ]; then
-    . ~/.nix-profile/etc/profile.d/nix.sh
-fi
+. ${config.home.profileDirectory}/etc/profile.d/nix.sh
 source ${./git-prompt.sh}
 PS1='[\w$(__git_ps1 " (%s)")]\$ '
 HISTSIZE=10000000

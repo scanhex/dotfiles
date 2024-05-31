@@ -1,7 +1,6 @@
 return {
     --"kawre/leetcode.nvim",
     dir = "~/Code/leetcode.nvim",
-    build = ":TSUpdate html",
     dependencies = {
         "nvim-telescope/telescope.nvim",
         "nvim-lua/plenary.nvim", -- required by telescope
@@ -11,8 +10,5 @@ return {
         "nvim-treesitter/nvim-treesitter",
         "rcarriga/nvim-notify",
         "nvim-tree/nvim-web-devicons",
-    },
-    opts = {
-        -- configuration goes here
-    },
+    }
 }
