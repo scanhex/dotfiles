@@ -18,8 +18,7 @@ return {
             local capabilities = require('cmp_nvim_lsp').default_capabilities()
             require('lspconfig').clangd.setup {
                 capabilities = capabilities,
---                cmd = { os.getenv('HOME') .. "/.nix-profile/bin/clangd", "--offset-encoding=utf-16", "-j=4", "--background-index", "--compile-commands-dir=./build/linux-gnu.release/cmake/" },
-                cmd = { os.getenv('HOME') .. "/.nix-profile/bin/clangd", "--offset-encoding=utf-16", "-j=4", "--background-index" }
+                cmd = { nixProfilePath .. "/bin/clangd", "--offset-encoding=utf-16", "-j=4" },
             }
             require('lspconfig').pyright.setup {
                 capabilities = capabilities

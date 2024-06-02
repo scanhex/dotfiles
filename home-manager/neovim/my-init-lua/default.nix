@@ -1,4 +1,4 @@
-{pkgs, lib, ...}:
+{config, pkgs, lib, ...}:
 let 
 	lazyPlugins = with pkgs.vimPlugins; [
 		base46
@@ -64,6 +64,7 @@ in
 			lazy-nvim
 		];
 		extraLuaConfig =  ''
+          nixProfilePath = "${config.home.profileDirectory}";
 	      require("theprimeagen/set")
 	      require("theprimeagen/remap")
           require("lazy").setup({
