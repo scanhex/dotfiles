@@ -39,6 +39,7 @@ in
       pkgs.bat
       pkgs.parquet-tools
       pkgs.stgit
+      pkgs.tig
       nix-user-chroot-patch
   ];
 
