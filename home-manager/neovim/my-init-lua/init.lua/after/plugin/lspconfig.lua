@@ -18,7 +18,8 @@ return {
             local capabilities = require('cmp_nvim_lsp').default_capabilities()
             require('lspconfig').clangd.setup {
                 capabilities = capabilities,
-                cmd = { os.getenv('HOME') .. "/.nix-profile/bin/clangd", "--offset-encoding=utf-16", "-j=4" },
+--                cmd = { os.getenv('HOME') .. "/.nix-profile/bin/clangd", "--offset-encoding=utf-16", "-j=4", "--background-index", "--compile-commands-dir=./build/linux-gnu.release/cmake/" },
+                cmd = { os.getenv('HOME') .. "/.nix-profile/bin/clangd", "--offset-encoding=utf-16", "-j=4", "--background-index" }
             }
             require('lspconfig').pyright.setup {
                 capabilities = capabilities
@@ -27,6 +28,9 @@ return {
                 capabilities = capabilities
             }
             require('lspconfig').nil_ls.setup {
+                capabilities = capabilities
+            }
+            require('lspconfig').rust_analyzer.setup {
                 capabilities = capabilities
             }
             --require('lspconfig').neocmake.setup {

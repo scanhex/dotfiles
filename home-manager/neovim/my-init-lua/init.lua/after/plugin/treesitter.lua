@@ -1,6 +1,7 @@
 return {
     {
         "nvim-treesitter/nvim-treesitter",
+        dependencies = { "nvim-treesitter/nvim-treesitter-context" },
         opts = {
             -- A list of parser names, or "all"
             -- ensure_installed = { "vimdoc", "javascript", "typescript", "c", "cpp", "lua", "rust"},

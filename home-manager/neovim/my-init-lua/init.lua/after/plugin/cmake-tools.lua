@@ -35,7 +35,7 @@ return {
         require("cmake-tools").setup {
             cmake_command = "cmake",                                          -- this is used to specify cmake command path
             ctest_command = "ctest",                                          -- this is used to specify ctest command path
-            cmake_regenerate_on_save = false,                                  -- auto generate when save CMakeLists.txt
+            cmake_regenerate_on_save = false,                                 -- auto generate when save CMakeLists.txt
             cmake_generate_options = { "-DCMAKE_EXPORT_COMPILE_COMMANDS=1" }, -- this will be passed when invoke `CMakeGenerate`
             cmake_build_options = { "--parallel 24" },                        -- this will be passed when invoke `CMakeBuild`
             -- support macro expansion:
@@ -132,7 +132,13 @@ return {
                                 auto_scroll = false,
                                 start_in_insert = false,
                                 enter = false,
-                                quit_on_exit = "success"
+                                quit_on_exit = "success",
+                                on_create = function()
+                                    assert(vim.bo.buftype == 'terminal', "Toggleterm should be a terminal buffer")
+                                    if vim.bo.buftype == 'terminal' then
+                                        vim.api.nvim_command('stopinsert')
+                                    end
+                                end
                             }
                         },   -- options to pass into the `overseer.new_task` command
                         on_new_task = function(task)

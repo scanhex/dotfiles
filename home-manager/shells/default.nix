@@ -13,8 +13,11 @@
         };
     };
     config = {
-        programs.bash.bashrcExtra = config.my.bash.bashrcPrefix + (import ./bashrc-base.nix {config = config;}).bashrcBase + config.my.bash.bashrcSuffix;
-        programs.bash.enable = true; # otherwise bashrcExtra/shellAliases wouldn't work 
+        programs.bash = {
+            enable = true; # otherwise bashrcExtra/shellAliases wouldn't work 
+            bashrcExtra = config.my.bash.bashrcPrefix + (import ./bashrc-base.nix {config = config;}).bashrcBase + config.my.bash.bashrcSuffix;
+            enableCompletion = true;
+        };
         #programs.zsh.enable = true;
         home.shellAliases = {
             mm = "micromamba";

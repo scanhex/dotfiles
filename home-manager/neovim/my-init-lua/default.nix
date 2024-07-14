@@ -15,6 +15,7 @@ let
         nvim-notify
 		nvim-treesitter.withAllGrammars
 		nvim-treesitter-textobjects
+		nvim-treesitter-context
         plenary-nvim
 		telescope-fzf-native-nvim
 		telescope-nvim
@@ -32,7 +33,11 @@ let
         diffview-nvim
         lazygit-nvim
         nvim-surround
-        #cmake-tools-nvim - add when it's out of unstable
+        zen-mode-nvim
+        rustaceanvim
+        refactoring-nvim
+        #trouble-nvim -- had some breaking changes post 24.05 release
+        #cmake-tools-nvim -- broken in nixpkgs 24.05, super laggy
 		];
 mkEntryFromDrv = drv:
             if lib.isDerivation drv then
