@@ -13,7 +13,7 @@ let
 		nvim-cmp
 		nvim-lspconfig
         nvim-notify
-		nvim-treesitter.withAllGrammars
+#		nvim-treesitter.withAllGrammars
 		nvim-treesitter-textobjects
 		nvim-treesitter-context
         plenary-nvim
