@@ -29,7 +29,7 @@ let
       specialArgs = {
         inherit lib username;
         inputs = self.inputs;
-        pkgs = if (nixpkgs != self.inputs.nixpkgs || config != { } || overlays != [ ]) then customPkgs else pkgs;
+        pkgs = customPkgs;
       };
       modules = [
 				self.inputs.home-manager.nixosModules.home-manager

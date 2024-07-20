@@ -1,4 +1,4 @@
-{ pkgs, username, ... }:
+{ pkgs, username, config, ... }:
 let 
 pythonEnv = pkgs.python311.withPackages (ps: [ ps.numpy ps.pandas ps.requests ]);
 in 
@@ -10,13 +10,22 @@ in
       # GUI
       kitty
       goodvibes
-			nixd
-			nix-bash-completions
+      nixd
+      nix-bash-completions
       pythonEnv
-			micromamba
+      micromamba
+      clinfo
       # emacs29-pgtk
     ];
   };
+
+  programs.nix-ld  = {
+    enable = true;
+    package = pkgs.nix-ld-rs;
+    libraries = config.hardware.opengl.extraPackages;
+  };
+  hardware.opengl.enable = true;
+  hardware.opengl.extraPackages = with pkgs; [ intel-ocl opencl-headers ];
 
   nix.settings = {
       substituters = [ "https://cache.nixos.org" "https://nix-community.cachix.org" "https://cuda-maintainers.cachix.org" ];
@@ -25,12 +34,14 @@ in
               "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
             ];
   };
+
   wsl = {
     enable = true;
     defaultUser = "${username}";
     startMenuLaunchers = true;
     nativeSystemd = true;
     interop.includePath = false;
+    useWindowsDriver = true;
 
     # Enable native Docker support
     # docker-native.enable = true;
