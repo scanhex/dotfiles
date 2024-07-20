@@ -44,7 +44,6 @@ let
 						users.${username} = import ../home-manager/home.nix;
 					};
 				}
-      ../nixos
 			] 
             ++ modules;
     });
@@ -52,11 +51,12 @@ in
 {
   flake.nixosConfigurations = {
     wsl = mkNixos {
-			username = "nixos";
-			hostname = "nixos";
-      modules = [ ../hosts/wsl
-								self.inputs.nixos-wsl.nixosModules.wsl
-			];
+      username = "nixos";
+      hostname = "nixos";
+      modules = [ 
+                ../hosts/wsl
+                self.inputs.nixos-wsl.nixosModules.wsl
+                ];
     };
   };
 }

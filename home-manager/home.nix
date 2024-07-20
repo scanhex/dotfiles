@@ -1,5 +1,5 @@
 # inspired by https://github.com/zendo/nsworld/blob/main/home-manager/hm-standalone.nix
-{ pkgs, ... }:
+{  pkgs, ... }:
 let nix-user-chroot-patch = pkgs.callPackage ../nix-user-chroot-patch {};
 in 
 {
@@ -9,7 +9,8 @@ in
     ./shells
   ];
 
-  nixpkgs.overlays = [ (final: prev: 
+  nixpkgs.overlays = [
+  (final: prev: 
       { 
       bash-completion = prev.bash-completion.overrideAttrs (old:  
           {

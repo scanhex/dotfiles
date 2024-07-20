@@ -1,4 +1,4 @@
-{config, pkgs, lib, ...}:
+{inputs, config, pkgs, lib, ...}:
 let 
 	lazyPlugins = with pkgs.vimPlugins; [
 		base46
@@ -50,6 +50,7 @@ in
 	programs.neovim = {
 		enable = true;
         defaultEditor = true;
+        package = inputs.neovim-nightly-overlay.packages.${pkgs.system}.default;
 		extraPackages = with pkgs; [
 			ripgrep
             clang
