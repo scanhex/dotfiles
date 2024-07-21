@@ -36,7 +36,7 @@ vim.g.netrw_browse_split = 0
 vim.g.netrw_banner = 0
 vim.g.netrw_winsize = 25
 
-if !os.getenv("TMUX") then
+if not os.getenv("TMUX") then
     vim.g.clipboard = {
         name = 'OSC 52',
         copy = {
