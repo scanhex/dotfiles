@@ -1,7 +1,4 @@
 { pkgs, username, config, ... }:
-let 
-pythonEnv = pkgs.python311.withPackages (ps: [ ps.numpy ps.pandas ps.requests ]);
-in 
 {
   home-manager.users.${username} = {
     home.packages = with pkgs; [
@@ -12,7 +9,6 @@ in
       goodvibes
       nixd
       nix-bash-completions
-      pythonEnv
       micromamba
       clinfo
       # emacs29-pgtk
