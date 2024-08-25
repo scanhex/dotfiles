@@ -1,7 +1,7 @@
 # inspired by https://github.com/zendo/nsworld/blob/main/home-manager/hm-standalone.nix
 {  pkgs, ... }:
 let nix-user-chroot-patch = pkgs.callPackage ../nix-user-chroot-patch {};
-pythonEnv = pkgs.python312.withPackages (ps: [ ps.numpy ps.pandas ps.matplotlib ps.requests ]);
+pythonEnv = pkgs.python312.withPackages (ps: [ ps.numpy ps.pandas ps.matplotlib ps.requests ps.pip ]);
 in 
 {
   imports = [
@@ -41,7 +41,7 @@ in
       pkgs.bat
       pkgs.stgit
       pkgs.tig
-      pkgs.uv
+      pkgs.virtualenv
       pythonEnv
       nix-user-chroot-patch
   ];
