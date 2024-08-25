@@ -1,4 +1,3 @@
-
 vim.g.mapleader = " "
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
@@ -16,6 +15,8 @@ vim.keymap.set("n", "N", "Nzzzv")
 vim.keymap.set("n", "<leader>gs", ":G<CR><C-W>L")
 vim.keymap.set("n", "<leader>gc", ":G ci -am \"\"<Left>")
 
+vim.keymap.set("c", "<M-b>", "<S-Left>")
+vim.keymap.set("c", "<M-f>", "<S-Right>")
 
 -- vim.keymap.set("n", "<leader>vwm", function()
 --     require("vim-with-me").StartVimWithMe()
@@ -28,10 +29,10 @@ vim.keymap.set("n", "<leader>gc", ":G ci -am \"\"<Left>")
 vim.keymap.set("x", "<leader>p", [["_dP]])
 
 -- next greatest remap ever : asbjornHaland
-vim.keymap.set({"n", "v"}, "<leader>y", [["+y]])
+vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
 vim.keymap.set("n", "<leader>Y", [["+Y]])
 
-vim.keymap.set({"n", "v"}, "<leader>d", [["_d]])
+vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]])
 
 vim.keymap.set("i", "jk", "<Esc>")
 
@@ -69,16 +70,19 @@ function OpenCMakeListsAndFindFileName()
         print('CMakeLists.txt not found in the current directory.')
     end
 end
+
 vim.keymap.set('n', '<F4>', ':lua OpenCMakeListsAndFindFileName()<CR>', { noremap = true, silent = true })
 
 function OpenCorrespondingTest(current_dir, file_name_without_extension)
     local test_file_path = current_dir .. '/tests/' .. file_name_without_extension .. '.cpp'
     vim.cmd('edit ' .. test_file_path)
 end
+
 function OpenCorrespondingSource(current_dir, file_name_without_extension)
     local source_file_path = current_dir:gsub('/tests$', '/') .. file_name_without_extension .. '.cpp'
     vim.cmd('edit ' .. source_file_path)
 end
+
 function OpenCorrespondingTestOrSource()
     local current_file_path = vim.fn.expand('%:p')
     local current_dir = vim.fn.fnamemodify(current_file_path, ':h')
@@ -89,14 +93,11 @@ function OpenCorrespondingTestOrSource()
         OpenCorrespondingTest(current_dir, file_name_without_extension)
     end
 end
+
 vim.keymap.set("n", "<F5>", ":lua OpenCorrespondingTestOrSource()<CR>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
 
-vim.keymap.set("n", "<leader>vpp", "<cmd>e ~/.dotfiles/nvim/.config/nvim/lua/theprimeagen/packer.lua<CR>");
-vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
-
 vim.keymap.set("n", "<leader><leader>", function()
     vim.cmd("so")
 end)
-
