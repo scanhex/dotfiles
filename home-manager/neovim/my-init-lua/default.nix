@@ -55,6 +55,7 @@ in
 			ripgrep
             clang
             pyright
+            ruff
             lua-language-server
             nil
             neocmakelsp

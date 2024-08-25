@@ -43,15 +43,13 @@ in
     interop.includePath = false;
     useWindowsDriver = true;
 
-    # Enable native Docker support
-    # docker-native.enable = true;
-
-    # Enable integration with Docker Desktop (needs to be installed)
-    # docker-desktop.enable = true;
+    docker-desktop.enable = true;
   };
 
   programs.zsh.enable = true;
   users.users.${username}.shell = pkgs.bash;
+
+  virtualisation.docker.enable = true;
 
   environment.systemPackages = with pkgs; [
     binutils
