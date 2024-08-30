@@ -6,11 +6,16 @@
 		userEmail = "scanhex@gmail.com";
         extraConfig.push.autoSetupRemote = true;
 		aliases = {
-			st = "status -sb";
+            br = "branch";
 			ci = "commit";
 			co = "checkout";
+			st = "status -sb";
+            ame = "commit -a --amend --no-edit";
 		};
 	};
+    home.shellAliases = {
+        gco = "git branch | grep -v \"^\*\" | fzf --height=20% --reverse --info=inline | xargs git checkout";
+    };
 
 	programs.git.delta.enable = true;
 }

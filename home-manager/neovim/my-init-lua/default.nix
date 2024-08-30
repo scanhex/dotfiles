@@ -36,9 +36,10 @@ let
         zen-mode-nvim
         rustaceanvim
         refactoring-nvim
+        nvim-dap
         #trouble-nvim -- had some breaking changes post 24.05 release
-        #cmake-tools-nvim -- broken in nixpkgs 24.05, super laggy
-		];
+        #cmake-tools-nvim -- broken in nixpkgs 24.05; also using scanhex/cmake-tools.nvim
+	];
 mkEntryFromDrv = drv:
             if lib.isDerivation drv then
               { name = "${lib.getName drv}"; path = drv; }
@@ -67,8 +68,10 @@ in
 		];
 		extraLuaConfig =  ''
           nixProfilePath = "${config.home.profileDirectory}";
+          vim.deprecate = function() end -- disable deprecation warnings
 	      require("theprimeagen/set")
 	      require("theprimeagen/remap")
+          codelldb_path = "${pkgs.vscode-extensions.vadimcn.vscode-lldb}/share/vscode/extensions/vadimcn.vscode-lldb/adapter/codelldb";
           require("lazy").setup({
             defaults = {
               lazy = false,

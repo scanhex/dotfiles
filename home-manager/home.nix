@@ -6,6 +6,7 @@ in
 {
   imports = [
     ./git.nix
+    ./tmux.nix
     ./neovim
     ./shells
   ];
@@ -47,6 +48,14 @@ in
   ];
 
   programs.fzf.enable = true;
+  programs.lazygit = {
+      enable = true;
+      settings = {
+          gui = {
+              scrollHeight = 10;
+          };
+      };
+  };
   xdg.enable = true;
   nix = { 
     enable = true;

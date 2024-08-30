@@ -1,6 +1,6 @@
 return {
     -- dir = "~/.local/share/nvim/personal/cmake-tools.nvim",
-    "Civitasv/cmake-tools.nvim",
+    "scanhex/cmake-tools.nvim",
     dependencies = {
         "stevearc/overseer.nvim",
         "akinsho/toggleterm.nvim",
@@ -15,7 +15,7 @@ return {
     init = function()
         local loaded = false
         local function check()
-            local cwd = vim.loop.cwd() -- NOTE change to vim.uv for nvim >=0.10
+            local cwd = vim.uv.cwd()
             if vim.fn.filereadable(cwd .. "/CMakeLists.txt") == 1 then
                 require("lazy").load({ plugins = { "cmake-tools.nvim" } })
                 loaded = true

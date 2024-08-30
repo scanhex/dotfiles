@@ -10,8 +10,10 @@ return {
   config = function()
     local telescope = require('telescope')
     local actions = require('telescope.actions')
-    local builtin = require('telescope.builtin')
 
+    if vim.fn.executable('rg') == 0 then
+        vim.notify('rg (ripgrep) is not installed, Telescope grep will be unavailable', vim.log.levels.WARN)
+    end
 
     local fb_actions = require "telescope".extensions.file_browser.actions
 
@@ -25,6 +27,11 @@ return {
         file_browser = {
           theme = "dropdown",
           hijack_netrw = true,
+          respect_gitignore = false,
+          hidden = true,
+          grouped = false,
+          layout_config = { height = 40, width = 100 },
+          initial_mode = "normal",
           mappings = {
             ["i"] = {
               ["<C-w>"] = function() vim.cmd('normal vbd') end,
@@ -57,12 +64,11 @@ return {
     --telescope.load_extension('cmake4vim')
   end,
   keys = {
-    { '<leader>pf', function() require("telescope.builtin").find_files() end,                                      {} },
-    { '<C-p>',      function() require("telescope.builtin").git_files() end,                                       {} },
+    { '<C-p>',      function() require("telescope.builtin").find_files({ hidden = true }) end,                     {} },
     { '<leader>ps', function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end, {} },
     { '<leader>pS', function() require("telescope.builtin").live_grep() end,                                       {} },
     { '<leader>vh', function() require("telescope.builtin").help_tags() end,                                       {} },
-    { ';f',         function() require("telescope.builtin").find_files({ no_ignore = false, hidden = true }) end,  {} },
+    { ';f',         function() require("telescope.builtin").find_files({ no_ignore = true, hidden = true }) end,   {} },
     { ';r',         function() require("telescope.builtin").live_grep() end,                                       {} },
     { '\\\\',       function() require("telescope.builtin").buffers() end,                                         {} },
     { ';t',         function() require("telescope.builtin").help_tags() end,                                       {} },
@@ -74,12 +80,7 @@ return {
       require("telescope").extensions.file_browser.file_browser({
         path = "%:p:h",
         cwd = telescope_buffer_dir(),
-        respect_gitignore = false,
-        hidden = true,
-        grouped = false,
-        previewer = false,
-        initial_mode = "normal",
-        layout_config = { height = 40 }
+        previewer = false
       })
     end, {} },
   },

@@ -1,5 +1,13 @@
 return {
     {
+        "nvim-treesitter/nvim-treesitter-context",
+        opts = {
+            max_lines = 20,
+            min_window_height = 15,
+            multiline_threshold = 5
+        }
+    },
+    {
         "nvim-treesitter/nvim-treesitter",
         dependencies = { "nvim-treesitter/nvim-treesitter-context" },
         opts = {

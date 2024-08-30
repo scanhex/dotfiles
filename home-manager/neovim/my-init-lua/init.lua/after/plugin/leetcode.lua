@@ -1,7 +1,7 @@
+if 0 == vim.fn.isdirectory(vim.fn.expand("~/Code/leetcode.nvim")) then
+    return {}
+end
 return {
-    --    {
-    --        dir = "~/Code/leetcode.vim"
-    --    },
     --"kawre/leetcode.nvim",
     dir = "~/Code/leetcode.nvim",
     dependencies = {
