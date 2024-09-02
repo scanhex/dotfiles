@@ -14,7 +14,7 @@
         {
           inherit getPaths;
           getModules = builtins.concatMap (getPaths "default.nix");
-#          getHmModules = builtins.concatMap (getPaths "home.nix");
+          getHmModules = builtins.concatMap (getPaths "home.nix");
         };
     });
   };

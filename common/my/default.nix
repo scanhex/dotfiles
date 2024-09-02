@@ -18,7 +18,6 @@ in
 
   config = {
     my = {
-      inherit (inputs.my) builder domain;
       user = "alex";
       name = "Alex Morozov";
       uid = 1000;
