@@ -21,7 +21,9 @@ in
       user = "alex";
       name = "Alex Morozov";
       uid = 1000;
-      keys = [ ];
+      keys = [ 
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOLkF8s/irjRBKOmZ72RvpipuXl5ZYhd86cEWYkL/+GX" # alex_master
+      ];
     };
   };
 }

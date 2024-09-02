@@ -42,6 +42,13 @@
     docker-desktop.enable = true;
   };
 
+  services.openssh = { 
+      enable = true;
+      settings = {
+          Port = 2222;
+      };
+  };
+
   programs.zsh.enable = true;
   users.users.${username}.shell = pkgs.bash;
 
