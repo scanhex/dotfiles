@@ -58,5 +58,12 @@ in
                 self.inputs.nixos-wsl.nixosModules.wsl
                 ];
     };
+    dell = mkNixos {
+      username = "alex";
+      hostname = "nixos";
+      modules = [ 
+                ../hosts/dell
+                ];
+    };
   };
 }

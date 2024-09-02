@@ -6,7 +6,8 @@ in
 {
   imports = [
     ./git.nix
-    ./tmux.nix
+    ./term/tmux.nix
+    ./term/wezterm.nix
     ./neovim
     ./shells
   ];
