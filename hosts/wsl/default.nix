@@ -38,8 +38,6 @@
     nativeSystemd = true;
     interop.includePath = false;
     useWindowsDriver = true;
-
-    docker-desktop.enable = true;
   };
 
   services.openssh = { 

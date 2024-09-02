@@ -1,6 +1,6 @@
 {
   inputs,
-  config,
+  username,
   lib,
   ...
 }:
@@ -10,7 +10,7 @@
     (lib.mkAliasOptionModule [ "hm" ] [
       "home-manager"
       "users"
-      config.my.user
+      username
     ])
   ] ++ lib.my.getModules [ ./. ];
 
