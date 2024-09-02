@@ -34,6 +34,7 @@ let
       modules = [
 				self.inputs.home-manager.nixosModules.home-manager
         ../common
+        ../nixos
 				{
 					home-manager = {
 						useGlobalPkgs = true;
