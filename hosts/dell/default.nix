@@ -7,7 +7,6 @@
 
   home-manager.users.${username} = {
     home.packages = with pkgs; [
-      wezterm
       nixd
       nix-bash-completions
       micromamba
@@ -28,7 +27,12 @@
   networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   services.xserver.enable = true;
-  services.displayManager.sddm.enable = true;
+  services.displayManager.sddm = { 
+    enable = true;
+    settings = {
+      General.GreeterEnvironment = "QT_SCREEN_SCALE_FACTORS=2";
+    };
+  };
   services.desktopManager.plasma6.enable = true;
 
   # Configure keymap in X11
@@ -46,8 +50,7 @@
 	  uid = 1000;
 	  shell = pkgs.bash;
 	  packages = with pkgs; [
-		  firefox
-			  tree
+		  thorium-browser
 	  ];
   };
 
@@ -71,6 +74,8 @@
 # If you want to use JACK applications, uncomment this
 #jack.enable = true;
   };
+
+  time.timeZone = "America/New_York";
 
   hm.my.wezterm.enable = true;
 
