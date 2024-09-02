@@ -50,7 +50,8 @@
 	  uid = 1000;
 	  shell = pkgs.bash;
 	  packages = with pkgs; [
-		  thorium-browser
+      firefox
+		  google-chrome
 	  ];
   };
 
