@@ -28,7 +28,7 @@
   networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   services.xserver.enable = true;
-  services.xserver.displayManager.sddm.enable = true;
+  services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
 
   # Configure keymap in X11
@@ -61,7 +61,18 @@
 
   programs.zsh.enable = true;
 
-  my.wezterm.enable = true;
+  #enable audio 
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+# If you want to use JACK applications, uncomment this
+#jack.enable = true;
+  };
+
+  hm.my.wezterm.enable = true;
 
   environment.systemPackages = with pkgs; [
     binutils
@@ -70,7 +81,6 @@
     curl
     vim
   ];
-
 
   system.stateVersion = "24.05";
 }

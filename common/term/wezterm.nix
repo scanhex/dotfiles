@@ -16,13 +16,16 @@
         programs.wezterm = {
             enable = true;
             package = pkgs.wezterm;
-            config = {
-                font = {
-                    bold = "Iosevka";
-                    italic = "Iosevka";
-                    normal = "Iosevka";
-                };
-            };
+            extraConfig = ''
+            local mylib = require 'mylib';
+return {
+  font = wezterm.font("Iosevka"),
+  font_size = 16.0,
+  keys = {
+    {key="n", mods="SHIFT|CTRL", action="ToggleFullScreen"},
+  }
+}
+'';
         };
     };
 }

@@ -33,6 +33,7 @@ let
       };
       modules = [
 				self.inputs.home-manager.nixosModules.home-manager
+        ../common
 				{
 					home-manager = {
 						useGlobalPkgs = true;
@@ -41,7 +42,6 @@ let
 						extraSpecialArgs = {
 							inputs = self.inputs;
 						};
-						users.${username} = import ../home-manager/home.nix;
 					};
 				}
 			] 
