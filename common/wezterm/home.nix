@@ -17,10 +17,9 @@
             enable = true;
             package = pkgs.wezterm;
             extraConfig = ''
-            local mylib = require 'mylib';
 return {
-  font = wezterm.font("Iosevka"),
-  font_size = 16.0,
+  font = wezterm.font("Iosevka Nerd Font Mono"),
+  font_size = 14.0,
   keys = {
     {key="n", mods="SHIFT|CTRL", action="ToggleFullScreen"},
   }
