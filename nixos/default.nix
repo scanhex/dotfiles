@@ -2,6 +2,8 @@
 {
   imports = [ ./apple-disable-fn.nix ];
 
+  security.sudo.wheelNeedsPassword = false;
+
   users.users.${username} = {
       isNormalUser = true;
       uid = config.my.uid;
