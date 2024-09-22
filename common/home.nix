@@ -38,6 +38,7 @@ in
       pkgs.stgit
       pkgs.tig
       pkgs.virtualenv
+      pkgs.pixi
       pythonEnv
       nix-user-chroot-patch
   ];
