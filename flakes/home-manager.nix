@@ -35,7 +35,7 @@ let
           # set the same option as home-manager in nixos/nix-darwin, to generate the same derivation
           nix.package = pkgs.nix;
         }
-        ../home-manager/home.nix
+        ../common/home.nix
       ] ++ modules;
     });
 in
@@ -47,10 +47,7 @@ in
   };
 
   perSystem = { self', inputs', pkgs, ... }: {
-#    packages.home-manager = inputs'.home-manager.packages.default;
-    packages = lib.filterAttrs (_: value: value ? type && value.type == "derivation") (
-      builtins.mapAttrs (name: _: pkgs.${name}) (self.overlays.default { } { })
-    );
+    packages.home-manager = inputs'.home-manager.packages.default;
     apps.init-home.program = pkgs.writeShellScriptBin "init-home" ''
       ${self'.packages.home-manager}/bin/home-manager --extra-experimental-features "nix-command flakes" switch --flake "${self}" "$@"
     '';

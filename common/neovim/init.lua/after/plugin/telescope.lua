@@ -60,12 +60,20 @@ return {
     })
 
     telescope.load_extension("file_browser")
+    telescope.load_extension('fzf')
     --telescope.load_extension('rooter')
     --telescope.load_extension('cmake4vim')
   end,
   keys = {
     { '<C-p>',      function() require("telescope.builtin").find_files({ hidden = true }) end,                     {} },
-    { '<leader>ps', function() require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") }) end, {} },
+    { '<leader>ps', function() require("telescope.builtin").grep_string({ search = vim.fn.input("Substring: ") }) end, {} },
+    { '<leader>pr', function() require("telescope.builtin").grep_string({ search = vim.fn.input("Regex: "), use_regex = true,
+        additional_args = function() return { "--multiline", "--multiline-dotall" } end
+    }) end, {} },
+    { '<leader>pt', function() require("telescope.builtin").grep_string({ search = vim.fn.input("Substring: "),
+          additional_args = function() return { "--glob", "!**/tests/**", "--glob", "!golden/**" } end }) end, {} },
+-- doesn't work    { '<leader>pr', function() require("telescope.builtin").find_files({
+--        find_command = { 'rg', '--files', '|', 'rg', '--regexp', vim.fn.input("Regex Pattern: ") } }) end, {} },
     { '<leader>pS', function() require("telescope.builtin").live_grep() end,                                       {} },
     { '<leader>vh', function() require("telescope.builtin").help_tags() end,                                       {} },
     { ';f',         function() require("telescope.builtin").find_files({ no_ignore = true, hidden = true }) end,   {} },

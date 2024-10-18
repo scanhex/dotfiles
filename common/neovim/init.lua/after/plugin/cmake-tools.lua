@@ -1,6 +1,7 @@
 return {
     -- dir = "~/.local/share/nvim/personal/cmake-tools.nvim",
     "scanhex/cmake-tools.nvim",
+    commit = "57277955513d6d0c7868cce3ae1d6f1f8dd9b9fe",
     dependencies = {
         "stevearc/overseer.nvim",
         "akinsho/toggleterm.nvim",

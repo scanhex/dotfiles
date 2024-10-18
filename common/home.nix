@@ -1,15 +1,10 @@
 # inspired by https://github.com/zendo/nsworld/blob/main/home-manager/hm-standalone.nix
-{  self, pkgs, lib, ... }:
+{ pkgs, lib, ... }:
 let nix-user-chroot-patch = pkgs.callPackage ../nix-user-chroot-patch {};
 pythonEnv = pkgs.python312.withPackages (ps: [ ps.numpy ps.pandas ps.matplotlib ps.requests ps.pip ]);
 in 
 {
   imports = lib.my.getHmModules [ ./. ];
-
-  nixpkgs.overlays = [
-    self.overlays.default
-  ];
-
 
   home.packages = [
     pkgs.bash
@@ -29,6 +24,7 @@ in
       pkgs.tig
       pkgs.virtualenv
       pkgs.pixi
+      pkgs.unstable.jujutsu
       pythonEnv
       nix-user-chroot-patch
   ];
