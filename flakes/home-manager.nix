@@ -1,4 +1,4 @@
-{ self, withSystem, ... }:
+{ self, lib, withSystem, ... }:
 
 let
   mkHome =
@@ -47,7 +47,10 @@ in
   };
 
   perSystem = { self', inputs', pkgs, ... }: {
-    packages.home-manager = inputs'.home-manager.packages.default;
+#    packages.home-manager = inputs'.home-manager.packages.default;
+    packages = lib.filterAttrs (_: value: value ? type && value.type == "derivation") (
+      builtins.mapAttrs (name: _: pkgs.${name}) (self.overlays.default { } { })
+    );
     apps.init-home.program = pkgs.writeShellScriptBin "init-home" ''
       ${self'.packages.home-manager}/bin/home-manager --extra-experimental-features "nix-command flakes" switch --flake "${self}" "$@"
     '';

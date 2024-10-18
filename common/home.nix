@@ -1,5 +1,5 @@
 # inspired by https://github.com/zendo/nsworld/blob/main/home-manager/hm-standalone.nix
-{  pkgs, lib, ... }:
+{  self, pkgs, lib, ... }:
 let nix-user-chroot-patch = pkgs.callPackage ../nix-user-chroot-patch {};
 pythonEnv = pkgs.python312.withPackages (ps: [ ps.numpy ps.pandas ps.matplotlib ps.requests ps.pip ]);
 in 
@@ -7,20 +7,8 @@ in
   imports = lib.my.getHmModules [ ./. ];
 
   nixpkgs.overlays = [
-  (final: prev: 
-      { 
-      bash-completion = prev.bash-completion.overrideAttrs (old:  
-          {
-            src = builtins.fetchurl {
-              url = "https://github.com/scop/bash-completion/releases/download/2.11/bash-completion-2.11.tar.xz";
-              sha256 = "1b0iz7da1sgifx1a5wdyx1kxbzys53v0kyk8nhxfipllmm5qka3k";
-            };
-          });
-      delta = prev.delta.overrideAttrs (old: 
-        {
-          postInstall = "";
-        });
-      })];
+    self.overlays.default
+  ];
 
 
   home.packages = [

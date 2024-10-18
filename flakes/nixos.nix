@@ -7,6 +7,7 @@ let
 			username,
 			system ? "x86_64-linux",
 			nixpkgs ? self.inputs.nixpkgs,
+            nixpkgs-unstable ? self.inputs.nixpkgs-unstable,
 			config ? { },
 			overlays ? [ ],
 			modules ? [ ]
@@ -16,7 +17,11 @@ let
       customPkgs = import nixpkgs (lib.recursiveUpdate
         {
           inherit system;
-          overlays = [ self.overlays.default ] ++ overlays;
+          overlays = [ self.overlays.default ] ++ overlays ++ [(final: prev: {
+            unstable = import nixpkgs-unstable {
+                inherit system;
+                config.allowUnfree = true;
+              };})];
           config.allowUnfree = true;
         }
         {
@@ -54,6 +59,10 @@ in
     wsl = mkNixos {
       username = "nixos";
       hostname = "nixos";
+      overlays = [
+          self.overlays.default
+      ];
+
       modules = [ 
                 ../hosts/wsl
                 self.inputs.nixos-wsl.nixosModules.wsl
