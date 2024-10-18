@@ -7,7 +7,6 @@
 let
   inherit (lib) mkOption types;
 in
-
 {
   options.my = {
     user = mkOption { type = types.str; };

@@ -30,6 +30,8 @@ in
       pkgs.nix
       pkgs.cargo
       pkgs.glibc
+      pkgs.gnumake
+      pkgs.cmake
       pkgs.clang-tools_17
       pkgs.gdb
       pkgs.valgrind
