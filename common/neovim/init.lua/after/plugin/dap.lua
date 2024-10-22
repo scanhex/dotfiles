@@ -4,7 +4,8 @@ return {
     "theHamsta/nvim-dap-virtual-text",
 --   "rcarriga/nvim-dap-ui",
     "jbyuki/one-small-step-for-vimkind",
-    "nvim-neotest/nvim-nio"
+    "nvim-neotest/nvim-nio",
+    "mfussenegger/nvim-dap-python"
   },
   keys = {
     {"<leader>db", function() require("dap").toggle_breakpoint() end},
@@ -170,5 +171,7 @@ return {
         -- detached = false,
       }
     }
+
+    require("dap-python").setup("python")
   end
 }
