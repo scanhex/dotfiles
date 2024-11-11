@@ -34,12 +34,13 @@
     };
   };
   services.desktopManager.plasma6.enable = true;
+  services.hardware.bolt.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
 	  layout = "us";
 	  variant = "dvorak";
-	  options = "caps:escape";
+	  options = "ctrl:nocaps";
   };
 
   users.users.${username} = {
@@ -81,6 +82,7 @@
   hm.my.wezterm.enable = true;
 
   environment.systemPackages = with pkgs; [
+    kdePackages.plasma-thunderbolt
     binutils
     tree
     file
