@@ -24,9 +24,15 @@ in
       pkgs.tig
       pkgs.virtualenv
       pkgs.pixi
+<<<<<<< Updated upstream
       pkgs.unstable.ast-grep
       pkgs.difftastic
       pkgs.ripgrep
+=======
+      pkgs.unstable.jujutsu
+      pkgs.unstable.ruff
+      pkgs.unstable.uv
+>>>>>>> Stashed changes
       pythonEnv
       nix-user-chroot-patch
   ];
