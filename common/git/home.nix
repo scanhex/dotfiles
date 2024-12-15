@@ -2,8 +2,9 @@
 {
   programs.git = {
     enable = true;
-    userName = "Alex Morozov";
-    userEmail = "scanhex@gmail.com";
+    userName = config.my.name;
+    userEmail = config.my.email;
+    ignores = [ "/personal/" ];
     extraConfig.push.autoSetupRemote = true;
     aliases = {
       br = "branch";

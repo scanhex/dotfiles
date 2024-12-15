@@ -5,8 +5,6 @@ vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
 vim.keymap.set("n", "J", function() return "mz" .. vim.v.count .. "J`z" end, { expr = true })
-vim.keymap.set("n", "<C-u>", "<C-u>zz")
-vim.keymap.set("n", "<C-d>", "<C-d>zz")
 vim.keymap.set("n", "<leader>h", "<C-W><C-H>")
 vim.keymap.set("n", "<leader>l", "<C-W><C-L>")
 vim.keymap.set("n", "n", "nzzzv")
@@ -97,7 +95,3 @@ end
 vim.keymap.set("n", "<F5>", ":lua OpenCorrespondingTestOrSource()<CR>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
-
-vim.keymap.set("n", "<leader><leader>", function()
-    vim.cmd("so")
-end)

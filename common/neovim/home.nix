@@ -58,6 +58,7 @@ in
             pyright
             lua-language-server
             nil
+            curl # for codegpt.nvim
             neocmakelsp
             pkgs.rust-analyzer
             lazygit
