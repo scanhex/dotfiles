@@ -34,7 +34,7 @@
   services.xserver.xkb = {
 	  layout = "us";
 	  variant = "dvorak";
-	  options = "caps:escape";
+	  options = "ctrl:nocaps";
   };
 
   users.users.${username} = {
