@@ -3,7 +3,7 @@
   programs.git = {
     enable = true;
     userName = config.my.name;
-    userEmail = config.my.email;
+    #userEmail = config.my.email;
     ignores = [ "/personal/" ];
     extraConfig.push.autoSetupRemote = true;
     aliases = {

@@ -1,6 +1,6 @@
-{config, username, ...}:
+{inputs, config, username, ...}:
 {
-  imports = [ ./apple-disable-fn.nix ];
+  imports = [ ./apple-disable-fn.nix inputs.home-manager.nixosModules.home-manager ../common ];
 
   security.sudo.wheelNeedsPassword = false;
 

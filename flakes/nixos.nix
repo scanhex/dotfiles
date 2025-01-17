@@ -75,5 +75,12 @@ in
                 ../hosts/dell
                 ];
     };
+    lina = mkNixos {
+      username = "alex";
+      hostname = "lina";
+      modules = [ 
+                ../hosts/lina
+                ];
+    };
   };
 }
