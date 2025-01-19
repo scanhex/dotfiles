@@ -1,7 +1,6 @@
 return {
     {
         "nvim-treesitter/nvim-treesitter-context",
-        commit = "f6c99b64111ab1424c8fde3d9a6f3cd08234f8cb",
         opts = {
             max_lines = 20,
             min_window_height = 15,
@@ -21,7 +20,8 @@ return {
 
             configs.setup({
                 -- A list of parser names, or "all"
-                -- ensure_installed = { "vimdoc", "javascript", "typescript", "c", "cpp", "lua", "rust"},
+                -- ensure_installed = "all",
+                ignore_install = "all",
 
                 -- Install parsers synchronously (only applied to `ensure_installed`)
                 sync_install = false,
@@ -29,6 +29,7 @@ return {
                 -- Automatically install missing parsers when entering buffer
                 -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
                 auto_install = false,
+
 
                 highlight = {
                     -- `false` will disable the whole extension

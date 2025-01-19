@@ -5,6 +5,7 @@
       ./hardware.nix
     ];
 
+
   home-manager.users.${username} = {
     home.packages = with pkgs; [
       nixd
@@ -16,7 +17,14 @@
   };
 
   boot.kernelPackages = pkgs.unstable.linuxPackages_latest;
+  hardware.bluetooth = {
+      enable = true; 
+      powerOnBoot = true;
+  };
+
   boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.configurationLimit = 15;
+  boot.loader.timeout = 0;
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
@@ -24,6 +32,7 @@
   services.xserver.enable = true;
   services.displayManager.sddm = { 
     enable = true;
+    wayland.enable = true;
     settings = {
       General.GreeterEnvironment = "QT_SCREEN_SCALE_FACTORS=2";
     };
@@ -46,16 +55,28 @@
 	  shell = pkgs.bash;
 	  packages = with pkgs; [
 		  google-chrome
+          (lutris.override {
+              extraLibraries = pkgs: [
+                  pkgs.libadwaita
+                  pkgs.gtk4
+              ];
+          })
+          discord
+          telegram-desktop
 	  ];
   };
+  my.mihoyo-telemetry.block = true;
 
   programs.nix-ld  = {
     enable = true;
     package = pkgs.nix-ld-rs;
     libraries = config.hardware.opengl.extraPackages;
   };
-  hardware.opengl.enable = true;
-  hardware.opengl.extraPackages = with pkgs; [ intel-ocl opencl-headers ];
+  programs.steam = {
+      enable = true;
+      remotePlay.openFirewall = true;
+      extraCompatPackages = [ pkgs.proton-ge-bin ];
+  };
 
   programs.zsh.enable = true;
 

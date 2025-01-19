@@ -30,6 +30,7 @@ in
       pkgs.unstable.jujutsu
       pkgs.unstable.ruff
       pkgs.unstable.uv
+      pkgs.pciutils
       pythonEnv
       nix-user-chroot-patch
   ];

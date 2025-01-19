@@ -30,4 +30,43 @@
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
+  hardware.opengl.enable = true;
+  hardware.opengl.extraPackages = with pkgs; [ opencl-headers ];
+  hardware.nvidia = { 
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
+      modesetting.enable = true;
+      
+      powerManagement = {
+          enable = true;
+          finegrained = true;
+      };
+      prime = {
+          offload = {
+              enable = true;
+              enableOffloadCmd = true;
+          };
+          nvidiaBusId = "PCI:01:00:0";
+          amdgpuBusId = "PCI:74:00:0";
+      };
+  };
+  services.xserver.videoDrivers = [ "nvidia" ];
+
+
+  environment.systemPackages = [ 
+      pkgs.virt-manager 
+      pkgs.libvirt 
+      pkgs.qemu 
+      pkgs.kmod 
+      ];
+  # kvm
+  virtualisation.libvirtd.enable = true;
+  boot.kernelParams = [ 
+      #passthrough
+      "amd_iommu=on" # todo try =pt if =on works
+      "iommu=on" 
+  ];
+  users.users.${config.my.user} = {
+      extraGroups = [ "libvirtd" "qemu-libvirtd" ];
+  };
 }

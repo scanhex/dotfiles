@@ -13,9 +13,9 @@ let
 		nvim-cmp
 		nvim-lspconfig
         nvim-notify
-#		nvim-treesitter.withAllGrammars
+		pkgs.unstable.vimPlugins.nvim-treesitter.withAllGrammars
 		nvim-treesitter-textobjects
-		nvim-treesitter-context
+		pkgs.unstable.vimPlugins.nvim-treesitter-context
         plenary-nvim
 		telescope-fzf-native-nvim
 		telescope-nvim
@@ -100,15 +100,8 @@ in
 	};
     xdg.configFile."nvim/parser".source =
       let
-      treesitterParsers = (pkgs.vimPlugins.nvim-treesitter.withPlugins (plugins: with plugins; [
-            cpp
-            cmake
-            rust
-            lua
-            nix
-            yaml
-            python
-            html
+      treesitterParsers = (pkgs.unstable.vimPlugins.nvim-treesitter.withPlugins (plugins: with plugins; [
+            cpp cmake rust lua nix yaml python html json gitignore bash gitcommit git_config diff
       ])).dependencies;
       parsers = pkgs.symlinkJoin {
         name = "treesitter-parsers";
