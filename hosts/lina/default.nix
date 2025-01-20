@@ -27,7 +27,10 @@
   boot.loader.timeout = 0;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
+  networking.networkmanager = {
+      enable = true;
+      wifi.powersave = false; # needed on Lina, can maybe disable for laptops
+  };
 
   services.xserver.enable = true;
   services.displayManager.sddm = { 
