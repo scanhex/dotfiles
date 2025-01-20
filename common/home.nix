@@ -9,6 +9,7 @@ in
   home.packages = [
     pkgs.bash
       pkgs.tmux 
+      pkgs.clang
       pkgs.rustc
       pkgs.nix
       pkgs.cargo
