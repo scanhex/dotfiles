@@ -1,23 +1,21 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 with lib; let
-  cfg = config.my.mihoyo-telemetry;
+  cfg = config.my.aatg;
 in {
-  options.my.mihoyo-telemetry = {
-    block = mkOption {
-      type = types.bool;
-      default = false;
-      description = lib.mdDoc ''
-        Whether to block miHoYo telemetry servers.
-      '';
-    };
+# Genshin Impact Launcher
+  options.my.aatg = {
+      installLibs = mkOption { type = types.bool; };
+      blockMihoyoTelemetry = mkOption { type = types.bool; };
   };
 
-  config = mkIf cfg.block {
-    networking.hosts = {
+  config.my.lutris.extraLibraries = mkIf cfg.installLibs [ pkgs.libadwaita pkgs.gtk4 ];
+
+  config.networking.hosts = mkIf cfg.blockMihoyoTelemetry {
       "0.0.0.0" = [
         "overseauspider.yuanshen.com"
         "log-upload-os.hoyoverse.com"
@@ -37,5 +35,4 @@ in {
         "remote-config-proxy-prd.uca.cloud.unity3d.com"
       ];
     };
-  };
 }

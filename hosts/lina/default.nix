@@ -51,17 +51,10 @@
 	  shell = pkgs.bash;
 	  packages = with pkgs; [
 		  google-chrome
-          (lutris.override {
-              extraLibraries = pkgs: [
-                  pkgs.libadwaita
-                  pkgs.gtk4
-              ];
-          })
           discord
           telegram-desktop
 	  ];
   };
-  my.mihoyo-telemetry.block = true;
 
   programs.nix-ld  = {
     enable = true;
@@ -90,6 +83,7 @@
   time.timeZone = "America/New_York";
 
   hm.my.wezterm.enable = true;
+  my.lutris.enable = true;
 
   environment.systemPackages = with pkgs; [
     binutils
