@@ -50,7 +50,7 @@ in
       package = pkgs.unstable.jujutsu;
       settings = {
           user.name = config.my.name;
-          #user.email = config.my.email;
+          user.email = config.my.email;
           merge-tools.difft.diff-args = ["--color=always" "$left" "$right" ];
           ui.diff.tool = "difft";
           ui.default-command = ["log" "-r" "present(@) | ancestors(immutable_heads().., 2) | present(trunk())"];
