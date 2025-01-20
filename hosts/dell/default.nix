@@ -36,13 +36,6 @@
   services.desktopManager.plasma6.enable = true;
   services.hardware.bolt.enable = true;
 
-  # Configure keymap in X11
-  services.xserver.xkb = {
-	  layout = "us";
-	  variant = "dvorak";
-	  options = "ctrl:nocaps";
-  };
-
   users.users.${username} = {
 	  isNormalUser = true;
 	  extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" ];

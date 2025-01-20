@@ -66,7 +66,5 @@
       "amd_iommu=on" # todo try =pt if =on works
       "iommu=on" 
   ];
-  users.users.${config.my.user} = {
-      extraGroups = [ "libvirtd" "qemu-libvirtd" ];
-  };
+  users.users.${config.my.user}.extraGroups = [ "libvirtd" "qemu-libvirtd" ];
 }
