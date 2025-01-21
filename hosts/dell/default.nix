@@ -52,10 +52,10 @@
   programs.nix-ld  = {
     enable = true;
     package = pkgs.nix-ld-rs;
-    libraries = config.hardware.opengl.extraPackages;
+    libraries = config.hardware.graphics.extraPackages;
   };
-  hardware.opengl.enable = true;
-  hardware.opengl.extraPackages = with pkgs; [ intel-ocl opencl-headers ];
+  hardware.graphics.enable = true;
+  hardware.graphics.extraPackages = with pkgs; [ intel-ocl opencl-headers ];
 
   programs.zsh.enable = true;
 

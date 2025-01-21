@@ -59,7 +59,7 @@
   programs.nix-ld  = {
     enable = true;
     package = pkgs.nix-ld-rs;
-    libraries = config.hardware.opengl.extraPackages;
+    libraries = config.hardware.graphics.extraPackages;
   };
   programs.steam = {
       enable = true;
