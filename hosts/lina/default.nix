@@ -83,6 +83,7 @@
   time.timeZone = "America/New_York";
 
   hm.my.wezterm.enable = true;
+  hm.my.zed.enable = true;
   my.lutris.enable = true;
 
   environment.systemPackages = with pkgs; [

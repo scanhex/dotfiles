@@ -16,6 +16,7 @@ in
       pkgs.glibc
       pkgs.gnumake
       pkgs.cmake
+      pkgs.ninja
       pkgs.clang-tools_17
       pkgs.gdb
       pkgs.valgrind
