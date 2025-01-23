@@ -9,7 +9,10 @@
             url = "github:NixOS/nixpkgs/nixos-unstable";
         };
         neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
-        flake-parts.url = "github:hercules-ci/flake-parts";
+        flake-parts = {
+            url = "github:hercules-ci/flake-parts";
+            inputs.nixpkgs-lib.follows = "nixpkgs";
+        };
         nixos-wsl = {
             url = "github:nix-community/NixOS-WSL";
             inputs.nixpkgs.follows = "nixpkgs";
