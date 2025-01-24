@@ -12,6 +12,7 @@
       nix-bash-completions
       micromamba
       clinfo
+      bibata-cursors
       # emacs29-pgtk
     ];
   };
@@ -83,6 +84,7 @@
   time.timeZone = "America/New_York";
 
   hm.my.wezterm.enable = true;
+  hm.my.ghostty.enable = true;
   hm.my.zed.enable = true;
   my.lutris.enable = true;
 
