@@ -59,6 +59,35 @@ return {
       },
     })
 
+    local cp_library_path = vim.env.CP_LIBRARY_PATH or cp_library_nix
+    if cp_library_path then
+        local builtin = require("telescope.builtin")
+        local action_state = require("telescope.actions.state")
+
+        local cp = require("scanhex.cp-library")
+        local pick_cp_files = function()
+          -- 2) Launch find_files
+          builtin.find_files({
+            prompt_title = "CP Library",
+            cwd = cp_library_path,
+            previewer = true,  
+            attach_mappings = function(prompt_bufnr, map)
+              actions.select_default:replace(function()
+                actions.close(prompt_bufnr)
+                local selection = action_state.get_selected_entry()
+                if selection == nil then
+                  return
+                end
+                cp.dependency_insert(selection.value, cp_library_path)
+              end)
+              return true
+            end,
+          })
+        end
+        vim.keymap.set("n", "<leader>fp", function() pick_cp_files() end, 
+            { desc = "Telescope picker for cp-library" })
+    end
+
     telescope.load_extension("file_browser")
     telescope.load_extension('fzf')
     --telescope.load_extension('rooter')

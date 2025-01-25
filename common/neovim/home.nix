@@ -69,9 +69,11 @@ in
 		extraLuaConfig =  ''
           nixProfilePath = "${config.home.profileDirectory}";
           vim.deprecate = function() end -- disable deprecation warnings
+          package.path = package.path .. ";${./init.lua/lua}/?.lua";
 	      require("theprimeagen/set")
 	      require("theprimeagen/remap")
           codelldb_path = "${pkgs.vscode-extensions.vadimcn.vscode-lldb}/share/vscode/extensions/vadimcn.vscode-lldb/adapter/codelldb";
+          cp_library_nix = "${inputs.cp-library}";
           require("lazy").setup({
             defaults = {
               lazy = false,
@@ -110,6 +112,4 @@ in
     in
       "${parsers}/parser";
     xdg.configFile."nvim/lua/plugins".source = ./init.lua/after/plugin;
-    xdg.configFile."nvim/lua/theprimeagen/set.lua".source = ./init.lua/lua/theprimeagen/set.lua;
-    xdg.configFile."nvim/lua/theprimeagen/remap.lua".source = ./init.lua/lua/theprimeagen/remap.lua;
 }

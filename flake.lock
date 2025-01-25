@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "cp-library": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1737483306,
+        "narHash": "sha256-F6zviiKoMKLEooIsyuLMW1y8sQ3RvXi7frQz3T4xgr8=",
+        "owner": "scanhex",
+        "repo": "cp-library",
+        "rev": "6d482827ed937b03197b4c286d48d3ee23bee7d6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "scanhex",
+        "repo": "cp-library",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -309,6 +325,7 @@
     },
     "root": {
       "inputs": {
+        "cp-library": "cp-library",
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "neovim-nightly-overlay": "neovim-nightly-overlay",

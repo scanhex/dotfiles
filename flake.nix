@@ -21,6 +21,10 @@
             url = "github:nix-community/home-manager/release-24.11";
             inputs.nixpkgs.follows = "nixpkgs";
         };
+        cp-library = {
+            url = "github:scanhex/cp-library";
+            flake = false;
+        };
     };
 
 	outputs = inputs@{ self, nixpkgs, flake-parts, ... }:
