@@ -6,6 +6,28 @@
     ];
 
 
+  environment.gnome.excludePackages = with pkgs; [ seahorse ];
+  services.xserver = {
+      enable = true;
+      displayManager.gdm.enable = true;
+      displayManager.startx.enable = true;
+      desktopManager.xfce.enable = true;
+      desktopManager.xterm.enable = true;
+#      desktopManager.cinnamon.enable = true;
+      desktopManager.gnome.enable = true;
+  };
+  services.displayManager.defaultSession = "plasma";
+#  services.displayManager.sddm = { 
+#    enable = true;
+#    wayland.enable = true;
+#    settings = {
+#      General.GreeterEnvironment = "QT_SCREEN_SCALE_FACTORS=2";
+#    };
+#  };
+  services.desktopManager.plasma6.enable = true;
+
+
+
   home-manager.users.${username} = {
     home.packages = with pkgs; [
       nixd
@@ -32,16 +54,6 @@
       enable = true;
       wifi.powersave = false; # needed on Lina, can maybe disable for laptops
   };
-
-  services.xserver.enable = true;
-  services.displayManager.sddm = { 
-    enable = true;
-    wayland.enable = true;
-    settings = {
-      General.GreeterEnvironment = "QT_SCREEN_SCALE_FACTORS=2";
-    };
-  };
-  services.desktopManager.plasma6.enable = true;
 
   users.users.${username} = {
 	  isNormalUser = true;

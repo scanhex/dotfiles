@@ -33,23 +33,23 @@
 
   hardware.graphics.enable = true;
   hardware.graphics.extraPackages = with pkgs; [ opencl-headers ];
-  hardware.nvidia = { 
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
-      modesetting.enable = true;
-      
-      powerManagement = {
-          enable = true;
-          finegrained = true;
-      };
-      prime = {
-          offload = {
-              enable = true;
-              enableOffloadCmd = true;
-          };
-          nvidiaBusId = "PCI:01:00:0";
-          amdgpuBusId = "PCI:74:00:0";
-      };
-  };
+#  hardware.nvidia = { 
+#      package = config.boot.kernelPackages.nvidiaPackages.stable;
+#      modesetting.enable = true;
+#      
+#      powerManagement = {
+#          enable = true;
+#          finegrained = true;
+#      };
+#      prime = {
+#          offload = {
+#              enable = true;
+#              enableOffloadCmd = true;
+#          };
+#          nvidiaBusId = "PCI:01:00:0";
+#          amdgpuBusId = "PCI:74:00:0";
+#      };
+#  };
   services.xserver.videoDrivers = [ "nvidia" ];
 
 
