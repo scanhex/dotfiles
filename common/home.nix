@@ -33,6 +33,7 @@ in
       pkgs.unstable.ruff
       pkgs.unstable.uv
       pkgs.pciutils
+      pkgs.yazi
       pythonEnv
       nix-user-chroot-patch
   ];
@@ -71,6 +72,7 @@ in
   nix = { 
     enable = true;
     settings = {
+      trusted-users = [ config.my.user ];
       use-xdg-base-directories = true;
       experimental-features = [ "nix-command" "flakes" ];
     };
