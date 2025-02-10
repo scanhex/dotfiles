@@ -21,7 +21,7 @@ in
       email = lib.strings.concatStringsSep "m" [ "scanhex@g" "ail.com"];
       uid = 1000;
       keys = [ 
-          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOLkF8s/irjRBKOmZ72RvpipuXl5ZYhd86cEWYkL/+GX" # alex_master
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOLkF8s/irjRBKOmZ72RvpipuXl5ZYhd86cEWYkL/+GX" # alex-master
       ];
   };
 }

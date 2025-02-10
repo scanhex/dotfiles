@@ -35,6 +35,7 @@
       micromamba
       clinfo
       bibata-cursors
+      osu-lazer-bin
       # emacs29-pgtk
     ];
   };
@@ -59,7 +60,7 @@
 	  isNormalUser = true;
 	  extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" ];
 	  group = "users";
-	  home = "/home/alex";
+	  home = "/home/${username}";
 	  uid = 1000;
 	  shell = pkgs.bash;
 	  packages = with pkgs; [
@@ -67,6 +68,22 @@
           discord
           telegram-desktop
 	  ];
+  };
+
+  services.openssh = {
+    enable = true;
+    ports = [ 22 ];
+    settings = {
+      PasswordAuthentication = false;
+      AllowUsers = [ username ]; 
+      UseDns = true;
+      X11Forwarding = true;
+      PermitRootLogin = "yes";
+    };
+  };
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 ];
   };
 
   programs.nix-ld  = {
@@ -99,6 +116,15 @@
   hm.my.ghostty.enable = true;
   hm.my.zed.enable = true;
   my.lutris.enable = true;
+
+  nix.settings = {
+      substituters = [ "https://cache.nixos.org" "https://nix-community.cachix.org" "https://cuda-maintainers.cachix.org" ];
+      trusted-public-keys = [
+              "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+              "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
+            ];
+  };
+  nixpkgs.config.cudaSupport = true;
 
   environment.systemPackages = with pkgs; [
     binutils
