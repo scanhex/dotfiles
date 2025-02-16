@@ -4,7 +4,7 @@ let
 in
 {
     options.my.lutris = {
-        enable = mkOption { type = types.bool; };
+        enable = mkOption { type = types.bool; default = false; };
         extraLibraries = mkOption { 
             type = types.listOf types.package; 
             default = [];

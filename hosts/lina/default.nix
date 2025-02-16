@@ -67,6 +67,7 @@
 		  google-chrome
           discord
           telegram-desktop
+          zotero
 	  ];
   };
 
@@ -94,7 +95,7 @@
   programs.steam = {
       enable = true;
       remotePlay.openFirewall = true;
-      extraCompatPackages = [ pkgs.proton-ge-bin ];
+      extraCompatPackages = [ pkgs.unstable.proton-ge-bin ];
   };
 
   programs.zsh.enable = true;

@@ -9,8 +9,8 @@ with lib; let
 in {
 # Genshin Impact Launcher
   options.my.aatg = {
-      installLibs = mkOption { type = types.bool; };
-      blockMihoyoTelemetry = mkOption { type = types.bool; };
+      installLibs = mkOption { type = types.bool; default = false; };
+      blockMihoyoTelemetry = mkOption { type = types.bool; default = false; };
   };
 
   config.my.lutris.extraLibraries = mkIf cfg.installLibs [ pkgs.libadwaita pkgs.gtk4 ];

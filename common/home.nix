@@ -77,6 +77,9 @@ in
       experimental-features = [ "nix-command" "flakes" ];
     };
   };
+  programs.bash.sessionVariables = {
+    NIXPKGS_ALLOW_UNFREE = "1";
+  };
 
   home.shellAliases = {
     python3 = "LD_PRELOAD=${nix-user-chroot-patch}/lib/nix-user-chroot-patch.so python3";

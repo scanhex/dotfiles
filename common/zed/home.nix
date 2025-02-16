@@ -10,7 +10,7 @@ with lib; let
 in
 {
     options.my.zed = { 
-        enable = mkOption { type = types.bool; };
+        enable = mkOption { type = types.bool; default = false; };
     };
 
     config = mkIf cfg.enable { 
