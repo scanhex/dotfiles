@@ -33,6 +33,7 @@ in
       pkgs.unstable.ruff
       pkgs.unstable.uv
       pkgs.pciutils
+      pkgs.nodePackages.nodejs
       pkgs.yazi
       pythonEnv
       nix-user-chroot-patch
