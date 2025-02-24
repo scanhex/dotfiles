@@ -1,0 +1,19 @@
+# Binaries
+whisper-dictation
+
+# Build artifacts
+*.o
+*.so
+*.dylib
+*.dll
+
+# Nix result
+result
+result-*
+
+# Whisper models
+models/
+*.bin
+
+# Dependencies
+whisper.cpp/
