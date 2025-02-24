@@ -24,11 +24,13 @@
           
           buildInputs = with pkgs; [
             portaudio
-            openai-whisper-cpp
+            curl
+            openssl
+            jansson
           ];
           
           buildPhase = ''
-            cc -o whisper-dictation main.c recording.c -lportaudio -lwhisper -lm -pthread -O3
+            cc -o whisper-dictation main.c recording.c -lportaudio -lcurl -lm -pthread -ljansson -O3
           '';
           
           installPhase = ''
@@ -40,7 +42,9 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             portaudio
-            openai-whisper-cpp
+            curl
+            openssl
+            jansson
             pkg-config
           ];
         };
