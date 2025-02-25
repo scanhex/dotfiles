@@ -9,6 +9,18 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <jansson.h>
+#include <uiohook.h>
+
+#ifdef __APPLE__
+#include <ApplicationServices/ApplicationServices.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#else
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+#include <X11/extensions/XTest.h>
+#include <xdo.h>
+#endif
 
 #include "recording.h"
 
@@ -17,6 +29,15 @@
 #define OUTPUT_TO_CLIPBOARD 1
 #define OUTPUT_TO_FILE 2
 #define OUTPUT_TO_STDOUT 3
+#define OUTPUT_TO_PASTE 4
+
+// Default hotkey combination for starting/stopping recording
+#define DEFAULT_MODIFIER_KEY (1 << 2) // CTRL key (1 is shift, 2 is ctrl, 3 is alt, 4 is meta)
+#define DEFAULT_KEY VC_F12        // F12 key
+
+// Hotkey configuration
+static uint16_t hotkey_modifier = DEFAULT_MODIFIER_KEY;
+static uint16_t hotkey_key = DEFAULT_KEY;
 
 // Flags to indicate app state
 static volatile int g_is_running = 1;
@@ -228,6 +249,117 @@ void write_to_clipboard(const char* text) {
 #endif
 }
 
+// Type text directly to the active application using platform-specific methods
+void direct_type_text(const char* text) {
+    if (!text || strlen(text) == 0) return;
+    
+    printf("Typing text: %s\n", text);
+
+#ifdef __APPLE__
+    // Create a string containing the text to paste
+    CFStringRef stringRef = CFStringCreateWithCString(NULL, text, kCFStringEncodingUTF8);
+    
+    // First copy it to pasteboard
+    PasteboardRef pasteboard;
+    PasteboardCreate(kPasteboardClipboard, &pasteboard);
+    PasteboardClear(pasteboard);
+    PasteboardSynchronize(pasteboard);
+    
+    CFDataRef dataRef = CFStringCreateExternalRepresentation(NULL, stringRef, kCFStringEncodingUTF8, 0);
+    PasteboardPutItemFlavor(pasteboard, (PasteboardItemID)1, CFSTR("public.utf8-plain-text"), dataRef, 0);
+    
+    CFRelease(dataRef);
+    CFRelease(stringRef);
+    CFRelease(pasteboard);
+    
+    // Now simulate Cmd+V to paste
+    CGEventRef keyDown1 = CGEventCreateKeyboardEvent(NULL, (CGKeyCode)55, true);  // Command down
+    CGEventRef keyDown2 = CGEventCreateKeyboardEvent(NULL, (CGKeyCode)9, true);   // V down
+    CGEventRef keyUp2 = CGEventCreateKeyboardEvent(NULL, (CGKeyCode)9, false);    // V up
+    CGEventRef keyUp1 = CGEventCreateKeyboardEvent(NULL, (CGKeyCode)55, false);   // Command up
+    
+    CGEventSetFlags(keyDown2, kCGEventFlagMaskCommand);
+    CGEventSetFlags(keyUp2, kCGEventFlagMaskCommand);
+    
+    CGEventPost(kCGHIDEventTap, keyDown1);
+    CGEventPost(kCGHIDEventTap, keyDown2);
+    CGEventPost(kCGHIDEventTap, keyUp2);
+    CGEventPost(kCGHIDEventTap, keyUp1);
+    
+    CFRelease(keyDown1);
+    CFRelease(keyDown2);
+    CFRelease(keyUp2);
+    CFRelease(keyUp1);
+    
+    printf("Text pasted (macOS)\n");
+    
+#elif defined(_WIN32)
+    // First copy to clipboard
+    const size_t len = strlen(text) + 1;
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+    memcpy(GlobalLock(hMem), text, len);
+    GlobalUnlock(hMem);
+    
+    if (OpenClipboard(NULL)) {
+        EmptyClipboard();
+        SetClipboardData(CF_TEXT, hMem);
+        CloseClipboard();
+        
+        // Simulate Ctrl+V
+        INPUT inputs[4] = {0};
+        
+        // Ctrl down
+        inputs[0].type = INPUT_KEYBOARD;
+        inputs[0].ki.wVk = VK_CONTROL;
+        
+        // V down
+        inputs[1].type = INPUT_KEYBOARD;
+        inputs[1].ki.wVk = 'V';
+        
+        // V up
+        inputs[2].type = INPUT_KEYBOARD;
+        inputs[2].ki.wVk = 'V';
+        inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
+        
+        // Ctrl up
+        inputs[3].type = INPUT_KEYBOARD;
+        inputs[3].ki.wVk = VK_CONTROL;
+        inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+        
+        SendInput(4, inputs, sizeof(INPUT));
+        
+        printf("Text pasted (Windows)\n");
+    } else {
+        GlobalFree(hMem);
+        printf("Failed to open clipboard\n");
+    }
+    
+#else
+    // Linux using xdotool
+    
+    // First copy to clipboard
+    write_to_clipboard(text);
+    
+    // Static xdotool instance (create only once)
+    static xdo_t* xdo = NULL;
+    if (xdo == NULL) {
+        xdo = xdo_new(NULL);
+        if (xdo == NULL) {
+            fprintf(stderr, "Error: Failed to initialize xdotool\n");
+            return;
+        }
+    }
+    
+    // Wait a bit to ensure clipboard is ready
+    usleep(100000);
+    
+    // Simulate Ctrl+V
+    xdo_send_keysequence_window(xdo, CURRENTWINDOW, "ctrl+v", 0);
+    
+    printf("Text pasted (Linux)\n");
+#endif
+}
+
 // Process the transcribed text
 void process_output(const char* text) {
     if (!text || strlen(text) == 0) return;
@@ -236,6 +368,11 @@ void process_output(const char* text) {
         case OUTPUT_TO_CLIPBOARD:
             printf("Copying to clipboard: %s\n", text);
             write_to_clipboard(text);
+            break;
+            
+        case OUTPUT_TO_PASTE:
+            printf("Pasting to active window: %s\n", text);
+            direct_type_text(text);
             break;
             
         case OUTPUT_TO_FILE:
@@ -259,9 +396,64 @@ void process_output(const char* text) {
     }
 }
 
-// Thread function to monitor keyboard input
+// Global hotkey dispatcher
+static void* dispatch_data = NULL;
+
+// uiohook event callback
+static void handle_event(uiohook_event * const event) {
+    switch (event->type) {
+        case EVENT_KEY_PRESSED:
+            // Check if this is our hotkey
+            if (event->data.keyboard.keycode == hotkey_key && 
+                (event->mask & hotkey_modifier) == hotkey_modifier) {
+                
+                pthread_mutex_lock(&g_mutex);
+                g_toggle_recording = 1;
+                pthread_mutex_unlock(&g_mutex);
+                
+                // We need to prevent this hotkey from being passed to other applications
+                // This is a bit of a hack but works in most cases
+                event->reserved = 1;
+            }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+// Function to initialize the hook
+static int init_hotkeys() {
+    hook_set_dispatch_proc(handle_event);
+    
+    // Start the hook
+    int code = hook_run();
+    if (code != UIOHOOK_SUCCESS) {
+        fprintf(stderr, "Failed to initialize global hotkeys: %d\n", code);
+        return -1;
+    }
+    
+    return 0;
+}
+
+// Thread function to start the hook and keep it running
+void* hotkey_thread(void* arg) {
+    printf("Initializing global hotkeys...\n");
+    
+    if (init_hotkeys() != 0) {
+        fprintf(stderr, "Failed to initialize global hotkeys.\n");
+        return NULL;
+    }
+    
+    // This thread will block in hook_run until interrupted
+    return NULL;
+}
+
+// Thread function to monitor keyboard input from stdin
+// This is a fallback if the global hotkey system doesn't work
 void* input_monitor(void* arg) {
     printf("Press ENTER to toggle recording, or Ctrl+C to quit\n");
+    printf("Global hotkey: Ctrl+F12\n");
     
     // Set stdin to non-blocking mode
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
@@ -414,22 +606,28 @@ void print_usage(const char* program_name) {
     printf("Usage: %s [OPTIONS]\n\n", program_name);
     printf("Options:\n");
     printf("  -k, --api-key KEY    OpenAI API key (required for OpenAI API usage)\n");
-    printf("  -o, --output TYPE    Output type: clipboard, file, stdout (default: clipboard)\n");
+    printf("  -o, --output TYPE    Output type: clipboard, paste, file, stdout (default: clipboard)\n");
     printf("  -f, --file PATH      Output file path (for file output type)\n");
+    printf("  -m, --mod KEY        Modifier key for hotkey (shift, ctrl, alt, meta) (default: ctrl)\n");
+    printf("  -g, --key KEY        Key for hotkey (f1-f12, etc.) (default: f12)\n");
     printf("  -h, --help           Display this help message\n\n");
     printf("Instructions:\n");
     printf("  1. Run the application with your OpenAI API key\n");
-    printf("  2. Press ENTER to start recording\n");
-    printf("  3. Press ENTER again to stop recording and process speech\n");
+    printf("  2. Press the global hotkey (Ctrl+F12 by default) or ENTER to start recording\n");
+    printf("  3. Press the global hotkey or ENTER again to stop recording and process speech\n");
     printf("  4. The transcription will be sent to the specified output (clipboard by default)\n");
     printf("  5. Press Ctrl+C to exit the application\n\n");
     printf("Note: OpenAI API usage is charged at $0.006 per minute of audio\n\n");
+    printf("The 'paste' output type will directly paste text into the active window\n");
 }
 
 int main(int argc, char** argv) {
     const char* output_type_str = "clipboard";
     const char* output_file_path = NULL;
     const char* api_key = NULL;
+    const char* hotkey_mod_str = "ctrl";
+    const char* hotkey_key_str = "f12";
+    pthread_t hotkey_thread_id;
     
     // Check for API key in environment variable
     char* env_api_key = getenv("OPENAI_API_KEY");
@@ -466,6 +664,24 @@ int main(int argc, char** argv) {
                 print_usage(argv[0]);
                 return 1;
             }
+        } else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--mod") == 0) {
+            if (i + 1 < argc) {
+                hotkey_mod_str = argv[i + 1];
+                i++;
+            } else {
+                fprintf(stderr, "Error: Missing modifier key after %s\n", argv[i]);
+                print_usage(argv[0]);
+                return 1;
+            }
+        } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--key") == 0) {
+            if (i + 1 < argc) {
+                hotkey_key_str = argv[i + 1];
+                i++;
+            } else {
+                fprintf(stderr, "Error: Missing key after %s\n", argv[i]);
+                print_usage(argv[0]);
+                return 1;
+            }
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             print_usage(argv[0]);
             return 0;
@@ -487,6 +703,8 @@ int main(int argc, char** argv) {
     // Set output type
     if (strcmp(output_type_str, "clipboard") == 0) {
         g_output_type = OUTPUT_TO_CLIPBOARD;
+    } else if (strcmp(output_type_str, "paste") == 0) {
+        g_output_type = OUTPUT_TO_PASTE;
     } else if (strcmp(output_type_str, "file") == 0) {
         g_output_type = OUTPUT_TO_FILE;
         if (output_file_path) {
@@ -503,16 +721,54 @@ int main(int argc, char** argv) {
         return 1;
     }
     
+    // Configure hotkey modifier
+    if (strcmp(hotkey_mod_str, "shift") == 0) {
+        hotkey_modifier = 1 << 0; // SHIFT
+    } else if (strcmp(hotkey_mod_str, "ctrl") == 0) {
+        hotkey_modifier = 1 << 2; // CTRL
+    } else if (strcmp(hotkey_mod_str, "alt") == 0) {
+        hotkey_modifier = 1 << 3; // ALT
+    } else if (strcmp(hotkey_mod_str, "meta") == 0 || strcmp(hotkey_mod_str, "super") == 0) {
+        hotkey_modifier = 1 << 4; // META/SUPER
+    } else {
+        fprintf(stderr, "Warning: Unknown modifier key '%s', using CTRL\n", hotkey_mod_str);
+        hotkey_modifier = 1 << 2; // CTRL
+    }
+    
+    // Configure hotkey
+    if (strcmp(hotkey_key_str, "f1") == 0) hotkey_key = VC_F1;
+    else if (strcmp(hotkey_key_str, "f2") == 0) hotkey_key = VC_F2;
+    else if (strcmp(hotkey_key_str, "f3") == 0) hotkey_key = VC_F3;
+    else if (strcmp(hotkey_key_str, "f4") == 0) hotkey_key = VC_F4;
+    else if (strcmp(hotkey_key_str, "f5") == 0) hotkey_key = VC_F5;
+    else if (strcmp(hotkey_key_str, "f6") == 0) hotkey_key = VC_F6;
+    else if (strcmp(hotkey_key_str, "f7") == 0) hotkey_key = VC_F7;
+    else if (strcmp(hotkey_key_str, "f8") == 0) hotkey_key = VC_F8;
+    else if (strcmp(hotkey_key_str, "f9") == 0) hotkey_key = VC_F9;
+    else if (strcmp(hotkey_key_str, "f10") == 0) hotkey_key = VC_F10;
+    else if (strcmp(hotkey_key_str, "f11") == 0) hotkey_key = VC_F11;
+    else if (strcmp(hotkey_key_str, "f12") == 0) hotkey_key = VC_F12;
+    else {
+        fprintf(stderr, "Warning: Unknown key '%s', using F12\n", hotkey_key_str);
+        hotkey_key = VC_F12;
+    }
+    
     // Initialize signal handler
     signal(SIGINT, handle_signal);
     
-    // Start input monitoring thread
+    // Start the global hotkey thread
+    if (pthread_create(&hotkey_thread_id, NULL, hotkey_thread, NULL) != 0) {
+        fprintf(stderr, "Warning: Failed to create global hotkey thread. Fallback to keyboard input only.\n");
+    }
+    
+    // Start input monitoring thread (as fallback)
     if (pthread_create(&input_thread, NULL, input_monitor, NULL) != 0) {
         fprintf(stderr, "Error: Failed to create input monitor thread\n");
         return 1;
     }
     
-    printf("Whisper Dictation - Press ENTER to start/stop recording, or Ctrl+C to quit\n");
+    printf("Whisper Dictation - Press %s+%s or ENTER to start/stop recording, or Ctrl+C to quit\n",
+           hotkey_mod_str, hotkey_key_str);
     
     // Create a temp directory for audio files
     char temp_dir[1024] = {0};
@@ -660,8 +916,15 @@ int main(int argc, char** argv) {
     }
     
     recording_free(rec_ctx);
+    
+    // Clean up input thread
     pthread_cancel(input_thread);
     pthread_join(input_thread, NULL);
+    
+    // Clean up hotkey thread
+    hook_stop();
+    pthread_cancel(hotkey_thread_id);
+    pthread_join(hotkey_thread_id, NULL);
     
     // Clean up temp directory
     rmdir(temp_dir);
