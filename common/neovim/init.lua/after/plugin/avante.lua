@@ -4,7 +4,13 @@ return {
   lazy = false,
   version = false, -- set this to "*" if you want to always pull the latest change, false to update on release
   opts = {
-    -- add any opts here
+    provider = "claude",
+    claude = {
+      endpoint = "https://api.anthropic.com",
+      model = "claude-3-7-sonnet-20250219",
+      temperature = 0,
+      max_tokens = 4096
+    }
   },
   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
   build = "make",
@@ -12,9 +18,9 @@ return {
     "stevearc/dressing.nvim",
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
-    "hrsh7th/nvim-cmp", -- autocompletion for avante commands and mentions
+    "hrsh7th/nvim-cmp",            -- autocompletion for avante commands and mentions
     "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
-    "zbirenbaum/copilot.lua", -- for providers='copilot'
+    "zbirenbaum/copilot.lua",      -- for providers='copilot'
     {
       -- support for image pasting
       "HakonHarnes/img-clip.nvim",
