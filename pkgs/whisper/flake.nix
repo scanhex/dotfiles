@@ -18,6 +18,7 @@
           numpy
           pyperclip
           pyxdg
+          xlib
         ]);
         
       in
@@ -28,21 +29,17 @@
           
           src = ./.;
           
-          buildInputs = [ pythonEnv ] ++ (if pkgs.stdenv.isLinux then [
-            pkgs.xdotool
-          ] else []);
+          buildInputs = [ pythonEnv ];
           
           installPhase = ''
             mkdir -p $out/bin
-            cp whisper_dictation.py $out/bin/whisper-dictation
+            cp main.py $out/bin/whisper-dictation
             chmod +x $out/bin/whisper-dictation
           '';
         };
         
         devShells.default = pkgs.mkShell {
-          buildInputs = [ pythonEnv ] ++ (if pkgs.stdenv.isLinux then [
-            pkgs.xdotool
-          ] else []);
+          buildInputs = [ pythonEnv ];
         };
       }
     );
