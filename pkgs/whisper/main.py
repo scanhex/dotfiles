@@ -40,7 +40,7 @@ MAX_RECORDING_SECONDS = 60  # Maximum recording time
 g_is_running = True
 g_is_recording = False
 g_toggle_recording = False
-g_api_key = ""
+g_api_key = "<your api key>"
 g_output_type = OUTPUT_TO_CLIPBOARD
 g_output_file = ""
 
@@ -390,165 +390,33 @@ def type_text_char_by_char(text):
         return False
     
     try:
-        if sys.platform == "darwin":  # macOS
-            # Use AppleScript to type each character
+        # Use pynput as the primary method
+        try:
+            from pynput.keyboard import Controller, Key
+            
+            keyboard = Controller()
+            
+            # Brief delay before typing
+            time.sleep(0.2)
+            
             for char in text:
-                # Escape special characters for AppleScript
-                if char in ['"', '\\', "'", '`']:
-                    char = f"\\{char}"
+                if char == '\n':
+                    keyboard.press(Key.enter)
+                    keyboard.release(Key.enter)
+                elif char == '\t':
+                    keyboard.press(Key.tab)
+                    keyboard.release(Key.tab)
+                else:
+                    keyboard.press(char)
+                    keyboard.release(char)
                 
-                cmd = f"""
-                osascript -e 'tell application "System Events" to keystroke "{char}"'
-                """
-                os.system(cmd)
-                # Small delay to prevent overwhelming the system
-                time.sleep(0.01)
-            return True
-            
-        elif sys.platform == "win32":  # Windows
-            import ctypes
-            from ctypes import wintypes
-            
-            # Load user32.dll
-            user32 = ctypes.WinDLL('user32', use_last_error=True)
-            
-            # Constants
-            INPUT_KEYBOARD = 1
-            KEYEVENTF_UNICODE = 0x0004
-            KEYEVENTF_KEYUP = 0x0002
-            
-            # Input structure for keyboard events
-            class KEYBDINPUT(ctypes.Structure):
-                _fields_ = (("wVk", wintypes.WORD),
-                           ("wScan", wintypes.WORD),
-                           ("dwFlags", wintypes.DWORD),
-                           ("time", wintypes.DWORD),
-                           ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong)))
-            
-            class INPUT(ctypes.Structure):
-                class _INPUT(ctypes.Union):
-                    _fields_ = (("ki", KEYBDINPUT),
-                               ("mi", ctypes.c_byte * 28),  # MouseInput
-                               ("hi", ctypes.c_byte * 32))  # HardwareInput
-                
-                _anonymous_ = ("_input",)
-                _fields_ = (("type", wintypes.DWORD),
-                           ("_input", _INPUT))
-            
-            # Type each character
-            for char in text:
-                # Create keyboard input for the character
-                unicode_val = ord(char)
-                
-                # Key down
-                key_down = INPUT(type=INPUT_KEYBOARD,
-                               ki=KEYBDINPUT(wVk=0, wScan=unicode_val, 
-                                            dwFlags=KEYEVENTF_UNICODE, 
-                                            time=0, dwExtraInfo=None))
-                
-                # Key up
-                key_up = INPUT(type=INPUT_KEYBOARD,
-                             ki=KEYBDINPUT(wVk=0, wScan=unicode_val, 
-                                          dwFlags=KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, 
-                                          time=0, dwExtraInfo=None))
-                
-                # Send inputs
-                inputs = (INPUT * 2)(key_down, key_up)
-                user32.SendInput(2, ctypes.byref(inputs), ctypes.sizeof(INPUT))
-                
-                # Small delay to prevent overwhelming the system
-                time.sleep(0.01)
+                time.sleep(0.001)
             
             return True
-            
-        elif sys.platform.startswith("linux"):  # Linux
-            try:
-                # Use python-xlib for key simulation
-                from Xlib import display, X
-                from Xlib.protocol import event
-                from Xlib.error import DisplayError
-                from Xlib.XK import string_to_keysym
                 
-                # Get the display
-                d = display.Display()
-                
-                # Get the active window (focus window)
-                window = d.get_input_focus().focus
-                
-                # Helper function to send key event
-                def send_key_event(keysym, press=True):
-                    keycode = d.keysym_to_keycode(keysym)
-                    if keycode == 0:
-                        return False
-                    
-                    event_type = X.KeyPress if press else X.KeyRelease
-                    key_event = event.KeyPress(
-                        time=X.CurrentTime,
-                        root=d.screen().root,
-                        window=window,
-                        same_screen=0, child=X.NONE,
-                        root_x=0, root_y=0, event_x=0, event_y=0,
-                        state=0,
-                        detail=keycode
-                    )
-                    key_event.type = event_type
-                    
-                    window.send_event(key_event, propagate=True)
-                    d.sync()
-                    return True
-                
-                # Send each character
-                for char in text:
-                    # Map special characters
-                    if char == ' ':
-                        keysym = string_to_keysym("space")
-                    elif char == '\n':
-                        keysym = string_to_keysym("Return")
-                    elif char == '\t':
-                        keysym = string_to_keysym("Tab")
-                    else:
-                        keysym = string_to_keysym(char)
-                    
-                    # Press and release key
-                    if keysym != 0:
-                        send_key_event(keysym, True)  # Key press
-                        send_key_event(keysym, False)  # Key release
-                    
-                    # Small delay
-                    time.sleep(0.01)
-                
-                return True
-                
-            except (ImportError, DisplayError) as e:
-                print(f"Cannot type character by character using Xlib: {e}")
-                
-                # Try pynput as fallback
-                try:
-                    from pynput.keyboard import Controller, Key
-                    
-                    keyboard = Controller()
-                    
-                    for char in text:
-                        if char == '\n':
-                            keyboard.press(Key.enter)
-                            keyboard.release(Key.enter)
-                        elif char == '\t':
-                            keyboard.press(Key.tab)
-                            keyboard.release(Key.tab)
-                        else:
-                            keyboard.press(char)
-                            keyboard.release(char)
-                        
-                        # Small delay
-                        time.sleep(0.01)
-                    
-                    return True
-                    
-                except Exception as e2:
-                    print(f"Cannot type character by character using pynput: {e2}")
-                    return False
-                
-        return False
+        except Exception as e:
+            print(f"Cannot type character by character using pynput: {e}")
+            return False
     
     except Exception as e:
         print(f"Error typing text character by character: {e}")
@@ -678,8 +546,7 @@ def transcribe_with_replicate(audio_file_path):
     
     headers = {
         "Authorization": f"Bearer {g_api_key}",
-        "Content-Type": "application/json",
-        "Prefer": "wait"  # Wait for the prediction to complete
+        "Content-Type": "application/json"
     }
     
     # First upload the file to Replicate
@@ -702,6 +569,7 @@ def transcribe_with_replicate(audio_file_path):
     print("Sending audio to Replicate API for transcription...")
     
     try:
+        # Create the prediction
         response = requests.post(
             REPLICATE_API_URL,
             headers=headers,
@@ -710,17 +578,62 @@ def transcribe_with_replicate(audio_file_path):
         
         response.raise_for_status()
         result = response.json()
+        prediction_id = result.get("id")
         
-        # Check if the prediction completed successfully
-        if result.get("status") == "succeeded":
-            # The output format depends on the model, but assuming it's returned as text
-            transcription = result.get("output", "")
-            if isinstance(transcription, list) and transcription:
-                return transcription[0]  # Often the first element contains the text
-            return transcription
-        else:
-            print(f"Error: Prediction failed or timed out: {result}")
+        if not prediction_id:
+            print(f"Error: Failed to create prediction: {result}")
             return None
+            
+        # Poll for the prediction result
+        get_url = f"{REPLICATE_API_URL}/{prediction_id}"
+        max_attempts = 60
+        attempt = 0
+        
+        while attempt < max_attempts:
+            attempt += 1
+            
+            # Wait before polling - shorter interval for faster response
+            time.sleep(0.3)
+            
+            # Get prediction status
+            get_response = requests.get(
+                get_url,
+                headers=headers
+            )
+            
+            if get_response.status_code != 200:
+                print(f"Error polling prediction: {get_response.text}")
+                continue
+                
+            prediction = get_response.json()
+            status = prediction.get("status")
+            
+            # Check status
+            if status == "succeeded":
+                # Extract text from output
+                output = prediction.get("output", {})
+                if isinstance(output, dict) and "text" in output:
+                    # The model returns both chunks and a combined text field
+                    # Just use the text field directly to avoid duplication
+                    return output["text"]
+                elif isinstance(output, dict) and "chunks" in output:
+                    # Only use chunks if there's no full text field
+                    chunks = output.get("chunks", [])
+                    if chunks:
+                        return " ".join(chunk.get("text", "") for chunk in chunks).strip()
+                    return ""
+                else:
+                    # Handle direct text output
+                    return output
+            elif status == "failed":
+                print(f"Prediction failed: {prediction.get('error')}")
+                return None
+            elif status == "canceled":
+                print("Prediction was canceled")
+                return None
+                
+        print(f"Prediction timed out after {max_attempts} attempts")
+        return None
     
     except requests.exceptions.RequestException as e:
         print(f"Error: Failed to transcribe audio: {e}")
