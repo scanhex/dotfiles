@@ -1,0 +1,27 @@
+{ inputs, system, ... }:
+[
+#  (import "${inputs.nixpkgs}/pkgs/top-level/by-name-overlay.nix" ../pkgs/by-name)
+  (final: prev: {
+    unstable = import inputs.nixpkgs-unstable {
+      inherit system;
+      config.allowUnfree = true;
+    };
+    zed-editor = final.unstable.callPackage ../pkgs/by-name/ze/zed-editor/package.nix {
+        writableTmpDirAsHomeHook = builtins.trace "Checking writableTmpDirAsHomeHook existence: ${
+          builtins.toString (final.unstable ? writableTmpDirAsHomeHook)
+        }" (final.unsable.writableTmpDirAsHomeHook or null);
+    };
+#      bash-completion = prev.bash-completion.overrideAttrs (old:  
+#          {
+#          src = builtins.fetchurl {
+#          url = "https://github.com/scop/bash-completion/releases/download/2.11/bash-completion-2.11.tar.xz";
+#          sha256 = "1b0iz7da1sgifx1a5wdyx1kxbzys53v0kyk8nhxfipllmm5qka3k";
+#          };
+#          });
+#      delta = prev.delta.overrideAttrs (old: 
+#          {
+#          postInstall = "";
+#          });
+  })
+]
+

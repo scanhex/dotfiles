@@ -1,4 +1,4 @@
-{ self, withSystem, ... }:
+{ self, inputs, withSystem, ... }:
 
 let
   mkNixos =
@@ -7,7 +7,6 @@ let
 			username,
 			system ? "x86_64-linux",
 			nixpkgs ? self.inputs.nixpkgs,
-            nixpkgs-unstable ? self.inputs.nixpkgs-unstable,
 			config ? { },
 			overlays ? [ ],
 			modules ? [ ]
@@ -17,16 +16,11 @@ let
       customPkgs = import nixpkgs (lib.recursiveUpdate
         {
           inherit system;
-          overlays = [ self.overlays.default ] ++ overlays ++ [(final: prev: {
-            unstable = import nixpkgs-unstable {
-                inherit system;
-                config.allowUnfree = true;
-              };})];
-          config.allowUnfree = true;
-        }
-        {
-          inherit config;
-        }
+          overlays = (import ../overlays {inherit inputs system; }) ++ overlays;
+          config = {
+            allowUnfree = true;
+          };
+        } { inherit config; }
       );
     in
     nixpkgs.lib.nixosSystem {
