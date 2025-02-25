@@ -18,9 +18,7 @@
           numpy
           pyperclip
           pyxdg
-        ] ++ (if pkgs.stdenv.isLinux then [
-          ps.python-xlib
-        ] else []));
+        ]);
         
       in
       {

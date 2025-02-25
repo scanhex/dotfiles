@@ -195,7 +195,7 @@ def setup_hotkey_listener(hotkey_combo):
     for key in hotkey_combo:
         if key in hotkey_mapping:
             hotkey_set.add(hotkey_mapping[key])
-        else:
+        elif len(key) == 1:
             # For regular keys (letters, numbers, etc.)
             hotkey_set.add(key)
     
@@ -232,17 +232,17 @@ def keyboard_input_monitor():
             break
 
 
-def get_xdg_cache_dir():
-    """Get XDG cache directory"""
-    try:
-        from xdg import XDG_CACHE_HOME
-        return Path(XDG_CACHE_HOME)
-    except ImportError:
-        # Fallback if pyxdg is not available
+def get_cache_dir():
+    """Get cross-platform cache directory"""
+    if sys.platform == "darwin":  # macOS
+        return Path(os.path.expanduser("~/Library/Caches/whisper_dictation"))
+    elif sys.platform == "win32":  # Windows
+        return Path(os.path.expanduser("~/AppData/Local/whisper_dictation/Cache"))
+    else:  # Linux and others (XDG)
         cache_home = os.environ.get("XDG_CACHE_HOME")
         if cache_home:
-            return Path(cache_home)
-        return Path(os.path.expanduser("~/.cache"))
+            return Path(cache_home) / "whisper_dictation"
+        return Path(os.path.expanduser("~/.cache/whisper_dictation"))
 
 
 def write_to_clipboard(text):
