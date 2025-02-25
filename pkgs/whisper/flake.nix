@@ -10,6 +10,18 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        
+        pythonEnv = pkgs.python3.withPackages (ps: with ps; [
+          pyaudio
+          pynput
+          requests
+          numpy
+          pyperclip
+          pyxdg
+        ] ++ (if pkgs.stdenv.isLinux then [
+          ps.python-xlib
+        ] else []));
+        
       in
       {
         packages.default = pkgs.stdenv.mkDerivation {
@@ -18,84 +30,20 @@
           
           src = ./.;
           
-          nativeBuildInputs = with pkgs; [
-            pkg-config
-          ];
-          
-          buildInputs = with pkgs; [
-            portaudio
-            curl
-            openssl
-            jansson
-            libuiohook
-          ] ++ (if pkgs.stdenv.isDarwin then [ 
-            pkgs.darwin.apple_sdk.frameworks.Carbon 
-            pkgs.darwin.apple_sdk.frameworks.AppKit
-          ] else if pkgs.stdenv.isLinux then [
-            xorg.libX11
-            xorg.libXtst
-            xorg.libXt
-            xorg.libXi
-            xorg.libxcb
-            xorg.xcbutilwm
-            xorg.xcbutilkeysyms
-            xorg.xcbutil
-            xorg.libXinerama
-            libxkbcommon
-            xdotool
-          ] else if pkgs.stdenv.isWindows then [
-            # Windows-specific dependencies would go here
+          buildInputs = [ pythonEnv ] ++ (if pkgs.stdenv.isLinux then [
+            pkgs.xdotool
           ] else []);
-          
-          buildPhase = ''
-            echo "Building with libxkbcommon from: $(find ${libxkbcommon}/lib -name "*.so" | sort)"
-            echo "Building with libX11 from: $(find ${xorg.libX11}/lib -name "*.so" | sort)"
-            
-            XCBINC="${xorg.libxcb}/include"
-            X11INC="${xorg.libX11}/include"
-            X11LIB="${xorg.libX11}/lib"
-            XKBLIB="${libxkbcommon}/lib"
-            
-            $CC -v -o whisper-dictation main.c recording.c \
-              -lportaudio -lcurl -lm -pthread -ljansson -luiohook \
-              -I$XCBINC -I$X11INC -L$X11LIB -L$XKBLIB \
-              ${if pkgs.stdenv.isLinux then "-lX11 -lXtst -lXt -lxcb -lX11-xcb -lXinerama -lxkbcommon -lxkbcommon-x11 -lxcb-util -lxcb-keysyms -lxcb-icccm -lxcb-ewmh -lxdo" else 
-                if pkgs.stdenv.isDarwin then "-framework Carbon -framework AppKit" else 
-                if pkgs.stdenv.isWindows then "-luser32" else ""} \
-              -O3
-          '';
           
           installPhase = ''
             mkdir -p $out/bin
-            cp whisper-dictation $out/bin/
+            cp whisper_dictation.py $out/bin/whisper-dictation
+            chmod +x $out/bin/whisper-dictation
           '';
         };
         
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            portaudio
-            curl
-            openssl
-            jansson
-            libuiohook
-            pkg-config
-          ] ++ (if pkgs.stdenv.isDarwin then [ 
-            pkgs.darwin.apple_sdk.frameworks.Carbon 
-            pkgs.darwin.apple_sdk.frameworks.AppKit
-          ] else if pkgs.stdenv.isLinux then [
-            xorg.libX11
-            xorg.libXtst
-            xorg.libXt
-            xorg.libXi
-            xorg.libxcb
-            xorg.xcbutilwm
-            xorg.xcbutilkeysyms
-            xorg.xcbutil
-            xorg.libXinerama
-            libxkbcommon
-            xdotool
-          ] else if pkgs.stdenv.isWindows then [
-            # Windows-specific dependencies would go here
+          buildInputs = [ pythonEnv ] ++ (if pkgs.stdenv.isLinux then [
+            pkgs.xdotool
           ] else []);
         };
       }
