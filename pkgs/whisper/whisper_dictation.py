@@ -48,8 +48,8 @@ g_output_file = ""
 g_mutex = threading.Lock()
 
 # Default hotkey settings
-DEFAULT_HOTKEY = {"ctrl", "f12"}
-g_hotkey = DEFAULT_HOTKEY
+DEFAULT_MODIFIER = keyboard.Key.ctrl
+DEFAULT_KEY = keyboard.Key.f12
 
 
 class AudioRecorder:
@@ -160,55 +160,56 @@ class AudioRecorder:
         self.p.terminate()
 
 
-def on_hotkey_pressed():
-    """Handle hotkey press"""
-    global g_toggle_recording, g_mutex
+class GlobalHotkeyListener:
+    """Global hotkey listener implementation"""
     
-    with g_mutex:
-        g_toggle_recording = True
-
-
-def setup_hotkey_listener(hotkey_combo):
-    """Set up global hotkey listener"""
-    # Create a hotkey combination
-    hotkey_mapping = {
-        "alt": keyboard.Key.alt,
-        "ctrl": keyboard.Key.ctrl,
-        "shift": keyboard.Key.shift,
-        "cmd": keyboard.Key.cmd,
-        "f1": keyboard.Key.f1,
-        "f2": keyboard.Key.f2,
-        "f3": keyboard.Key.f3,
-        "f4": keyboard.Key.f4,
-        "f5": keyboard.Key.f5,
-        "f6": keyboard.Key.f6,
-        "f7": keyboard.Key.f7,
-        "f8": keyboard.Key.f8,
-        "f9": keyboard.Key.f9,
-        "f10": keyboard.Key.f10,
-        "f11": keyboard.Key.f11,
-        "f12": keyboard.Key.f12,
-    }
+    def __init__(self, modifier_key, main_key):
+        self.modifier_pressed = False
+        self.modifier_key = modifier_key
+        self.main_key = main_key
+        self.listener = None
     
-    # Map string keys to actual key objects
-    hotkey_set = set()
-    for key in hotkey_combo:
-        if key in hotkey_mapping:
-            hotkey_set.add(hotkey_mapping[key])
-        elif len(key) == 1:
-            # For regular keys (letters, numbers, etc.)
-            hotkey_set.add(key)
+    def on_press(self, key):
+        """Handle key press events"""
+        try:
+            # Debug output for key presses
+            # print(f"Key pressed: {key}")
+            
+            # Check if this is our modifier key
+            if key == self.modifier_key:
+                self.modifier_pressed = True
+            
+            # If modifier is pressed and this is our main key, trigger the action
+            elif self.modifier_pressed and key == self.main_key:
+                with g_mutex:
+                    global g_toggle_recording
+                    g_toggle_recording = True
+                    print("Hotkey combination detected! Toggling recording...")
+        except Exception as e:
+            print(f"Error in hotkey listener: {e}")
+        
+        return True  # Continue listening
     
-    # Create a hotkey listener
-    hotkey = keyboard.HotKey(hotkey_set, on_hotkey_pressed)
+    def on_release(self, key):
+        """Handle key release events"""
+        try:
+            if key == self.modifier_key:
+                self.modifier_pressed = False
+        except Exception as e:
+            print(f"Error in hotkey listener: {e}")
+        
+        return True  # Continue listening
     
-    def for_canonical(f):
-        return lambda k: f(listener.canonical(k))
+    def start(self):
+        """Start the keyboard listener"""
+        self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+        self.listener.daemon = True
+        self.listener.start()
     
-    listener = keyboard.Listener(on_press=for_canonical(hotkey.press), on_release=for_canonical(hotkey.release))
-    listener.start()
-    
-    return listener
+    def stop(self):
+        """Stop the keyboard listener"""
+        if self.listener:
+            self.listener.stop()
 
 
 def keyboard_input_monitor():
@@ -225,6 +226,7 @@ def keyboard_input_monitor():
                 if line:
                     with g_mutex:
                         g_toggle_recording = True
+                        print("Toggle recording requested from keyboard")
             
             time.sleep(0.1)  # Sleep to reduce CPU usage
         except (KeyboardInterrupt, EOFError):
@@ -422,7 +424,7 @@ def signal_handler(signum, frame):
 
 def main():
     """Main application function"""
-    global g_api_key, g_output_type, g_output_file, g_hotkey, g_is_running, g_is_recording, g_toggle_recording, g_mutex
+    global g_api_key, g_output_type, g_output_file, g_is_running, g_is_recording, g_toggle_recording, g_mutex
     
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Whisper Dictation - A lightweight dictation app using OpenAI API")
@@ -456,16 +458,49 @@ def main():
     elif args.output == "stdout":
         g_output_type = OUTPUT_TO_STDOUT
     
-    # Set hotkey
-    hotkey = DEFAULT_HOTKEY
-    if args.mod and args.key:
-        hotkey = {args.mod, args.key}
+    # Set up hotkey combination
+    modifier_key = DEFAULT_MODIFIER
+    main_key = DEFAULT_KEY
+    
+    # Map string modifier keys to keyboard.Key objects
+    modifier_map = {
+        "ctrl": keyboard.Key.ctrl, 
+        "alt": keyboard.Key.alt, 
+        "shift": keyboard.Key.shift, 
+        "cmd": keyboard.Key.cmd,
+        "meta": keyboard.Key.cmd
+    }
+    
+    # Map string keys to keyboard.Key objects
+    key_map = {
+        "f1": keyboard.Key.f1,
+        "f2": keyboard.Key.f2,
+        "f3": keyboard.Key.f3,
+        "f4": keyboard.Key.f4,
+        "f5": keyboard.Key.f5,
+        "f6": keyboard.Key.f6,
+        "f7": keyboard.Key.f7,
+        "f8": keyboard.Key.f8,
+        "f9": keyboard.Key.f9,
+        "f10": keyboard.Key.f10,
+        "f11": keyboard.Key.f11,
+        "f12": keyboard.Key.f12,
+    }
+    
+    # Set modifier key
+    if args.mod and args.mod in modifier_map:
+        modifier_key = modifier_map[args.mod]
+    
+    # Set main key
+    if args.key:
+        if args.key in key_map:
+            main_key = key_map[args.key]
+        elif len(args.key) == 1:
+            # For regular keys (letters, numbers, etc.)
+            main_key = keyboard.KeyCode.from_char(args.key)
     
     # Set up signal handler
     signal.signal(signal.SIGINT, signal_handler)
-    
-    # Start hotkey listener
-    hotkey_listener = setup_hotkey_listener(hotkey)
     
     # Create temporary directory for audio files
     temp_dir = Path(tempfile.gettempdir()) / "whisper_dictation"
@@ -479,12 +514,18 @@ def main():
         format=FORMAT
     )
     
-    # Start input monitoring thread
+    # Start hotkey listener
+    print(f"Setting up global hotkey: {modifier_key}+{main_key}")
+    hotkey_listener = GlobalHotkeyListener(modifier_key, main_key)
+    hotkey_listener.start()
+    
+    # Start input monitoring thread as fallback
+    import select
     input_thread = threading.Thread(target=keyboard_input_monitor)
     input_thread.daemon = True
     input_thread.start()
     
-    print(f"Whisper Dictation - Press the hotkey or Enter to start/stop recording")
+    print(f"Whisper Dictation - Press the global hotkey or Enter to start/stop recording")
     print(f"Using OpenAI API for transcription (Whisper API)")
     print(f"Temporary audio files will be stored in {temp_dir}")
     
@@ -559,6 +600,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # Import select only when needed (on keyboard_input_monitor)
     import select
     sys.exit(main())
