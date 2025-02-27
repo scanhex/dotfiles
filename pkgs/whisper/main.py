@@ -25,9 +25,17 @@ OUTPUT_TO_PASTE = 2
 OUTPUT_TO_FILE = 3
 OUTPUT_TO_STDOUT = 4
 
+# API service options
+SERVICE_REPLICATE = 1
+SERVICE_ELEVENLABS = 2
+
 # Replicate API settings
 REPLICATE_API_URL = "https://api.replicate.com/v1/predictions"
 REPLICATE_MODEL_VERSION = "3ab86df6c8f54c11309d4d1f930ac292bad43ace52d10c80d87eb258b3c9f79c"
+
+# ElevenLabs API settings
+ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1/speech-to-text"
+ELEVENLABS_MODEL = "scribe_v1"  # Currently only scribe_v1 is supported
 
 # Default recording settings
 SAMPLE_RATE = 16000  # 16kHz (appropriate for Whisper API)
@@ -40,7 +48,8 @@ MAX_RECORDING_SECONDS = 60  # Maximum recording time
 g_is_running = True
 g_is_recording = False
 g_toggle_recording = False
-g_api_key = "<your api key>"
+g_api_key = ""
+g_service = SERVICE_ELEVENLABS  # Default to ElevenLabs
 g_output_type = OUTPUT_TO_CLIPBOARD
 g_output_file = ""
 
@@ -536,6 +545,61 @@ def process_output(text):
         print(f"Transcript: {text}")
 
 
+def transcribe_with_elevenlabs(audio_file_path):
+    """Transcribe audio using ElevenLabs API"""
+    global g_api_key
+    
+    if not g_api_key:
+        print("Error: ElevenLabs API key not set. Use --api-key option.")
+        return None
+    
+    headers = {
+        "xi-api-key": g_api_key,
+        "Accept": "application/json"
+    }
+    
+    print("Sending audio to ElevenLabs API for transcription...")
+    
+    try:
+        # Create multipart form data
+        with open(audio_file_path, "rb") as f:
+            audio_content = f.read()
+        
+        files = {
+            'file': ('audio.wav', audio_content, 'audio/wav'),
+        }
+        
+        data = {
+            'model_id': ELEVENLABS_MODEL,
+            'language_code': 'en',  # Default to English
+            'tag_audio_events': 'false',  # Don't tag audio events like laughter
+            'diarize': 'false'  # Don't annotate who is speaking
+        }
+        
+        # Send request to ElevenLabs API
+        response = requests.post(
+            ELEVENLABS_API_URL,
+            headers=headers,
+            files=files,
+            data=data
+        )
+        
+        response.raise_for_status()
+        result = response.json()
+        
+        # Extract transcription text
+        if result and "text" in result:
+            return result["text"]
+        else:
+            print(f"Error: Unexpected response format: {result}")
+            return None
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error: Failed to transcribe audio: {e}")
+        if hasattr(e, "response") and e.response:
+            print(f"Response: {e.response.text}")
+        return None
+
 def transcribe_with_replicate(audio_file_path):
     """Transcribe audio using Replicate Whisper API"""
     global g_api_key
@@ -656,8 +720,10 @@ def main():
     global g_api_key, g_output_type, g_output_file, g_is_running, g_is_recording, g_toggle_recording, g_mutex
     
     # Set up argument parser
-    parser = argparse.ArgumentParser(description="Whisper Dictation - A lightweight dictation app using Replicate's Whisper v3")
-    parser.add_argument("-k", "--api-key", help="Replicate API token")
+    parser = argparse.ArgumentParser(description="Whisper Dictation - A lightweight dictation app using speech-to-text APIs")
+    parser.add_argument("-k", "--api-key", help="API token for selected service")
+    parser.add_argument("-s", "--service", choices=["replicate", "elevenlabs"], default="elevenlabs", 
+                      help="Speech-to-text service to use (default: elevenlabs)")
     parser.add_argument("-o", "--output", choices=["clipboard", "paste", "file", "stdout"], default="clipboard", 
                       help="Output type (paste will use character-by-character input for text applications)")
     parser.add_argument("-f", "--file", help="Output file path (for file output type)")
@@ -665,13 +731,27 @@ def main():
     parser.add_argument("-g", "--key", help="Key for hotkey (f1-f12, etc.)")
     args = parser.parse_args()
     
-    # Set API key from arguments or environment variable
-    api_key = args.api_key or os.environ.get("REPLICATE_API_TOKEN")
-    if api_key:
-        g_api_key = api_key
+    # Set service type
+    global g_service
+    if args.service == "replicate":
+        g_service = SERVICE_REPLICATE
     else:
-        print("Error: No Replicate API token provided. Set with --api-key or REPLICATE_API_TOKEN environment variable.")
-        return 1
+        g_service = SERVICE_ELEVENLABS
+        
+    # Set API key from arguments or environment variable
+    api_key = None
+    if g_service == SERVICE_REPLICATE:
+        api_key = args.api_key or os.environ.get("REPLICATE_API_TOKEN")
+        if not api_key:
+            print("Error: No Replicate API token provided. Set with --api-key or REPLICATE_API_TOKEN environment variable.")
+            return 1
+    else:  # SERVICE_ELEVENLABS
+        api_key = args.api_key or os.environ.get("ELEVENLABS_API_KEY")
+        if not api_key:
+            print("Error: No ElevenLabs API key provided. Set with --api-key or ELEVENLABS_API_KEY environment variable.")
+            return 1
+    
+    g_api_key = api_key
     
     # Set output type
     if args.output == "clipboard":
@@ -756,7 +836,12 @@ def main():
     input_thread.start()
     
     print(f"Whisper Dictation - Press the global hotkey or Enter to start/stop recording")
-    print(f"Using Replicate API for transcription (Whisper v3 large turbo)")
+    
+    if g_service == SERVICE_REPLICATE:
+        print(f"Using Replicate API for transcription (Whisper v3 large turbo)")
+    else:  # SERVICE_ELEVENLABS
+        print(f"Using ElevenLabs API for transcription (model: {ELEVENLABS_MODEL})")
+        
     print(f"Temporary audio files will be stored in {temp_dir}")
     
     # Main loop
@@ -786,14 +871,20 @@ def main():
                 wav_path = temp_dir / f"recording_{int(time.time())}.wav"
                 recorder.save_to_wav(str(wav_path))
                 
-                # Transcribe audio
-                transcription = transcribe_with_replicate(str(wav_path))
+                # Transcribe audio based on selected service
+                transcription = None
+                if g_service == SERVICE_REPLICATE:
+                    print("Using Replicate API for transcription...")
+                    transcription = transcribe_with_replicate(str(wav_path))
+                else:  # SERVICE_ELEVENLABS
+                    print("Using ElevenLabs API for transcription...")
+                    transcription = transcribe_with_elevenlabs(str(wav_path))
                 
                 if transcription:
                     # Process output
                     process_output(transcription)
                 else:
-                    print("Failed to get transcription from OpenAI API.")
+                    print("Failed to get transcription from the selected API.")
                 
                 # Remove temporary WAV file
                 try:
