@@ -545,8 +545,8 @@ def process_output(text):
         print(f"Transcript: {text}")
 
 
-def transcribe_with_elevenlabs(audio_file_path):
-    """Transcribe audio using ElevenLabs API"""
+def transcribe_with_elevenlabs(audio_file_path, max_retries=3, retry_delay=2):
+    """Transcribe audio using ElevenLabs API with retry logic"""
     global g_api_key
     
     if not g_api_key:
@@ -558,50 +558,131 @@ def transcribe_with_elevenlabs(audio_file_path):
         "Accept": "application/json"
     }
     
-    print("Sending audio to ElevenLabs API for transcription...")
+    print(f"Sending audio to ElevenLabs API for transcription (with {max_retries} retries)...")
     
+    # Check if the audio file is valid
     try:
-        # Create multipart form data
-        with open(audio_file_path, "rb") as f:
-            audio_content = f.read()
+        with wave.open(audio_file_path, 'rb') as wf:
+            # Get basic info about the WAV file
+            channels = wf.getnchannels()
+            sampwidth = wf.getsampwidth()
+            framerate = wf.getframerate()
+            frames = wf.getnframes()
+            
+            # Print audio file info
+            print(f"Audio file info: {frames} frames, {framerate} Hz, {channels} channels, {sampwidth} bytes/sample")
+            
+            # Check if the audio file has content
+            if frames == 0:
+                print("Error: Audio file contains no frames")
+                return None
+                
+            # Check duration in seconds
+            duration = frames / float(framerate)
+            print(f"Audio duration: {duration:.2f} seconds")
+            
+            if duration < 0.5:
+                print("Error: Audio file is too short (less than 0.5 seconds)")
+                return None
+    except Exception as e:
+        print(f"Error checking audio file: {e}")
+        return None
         
-        files = {
-            'file': ('audio.wav', audio_content, 'audio/wav'),
-        }
-        
-        data = {
-            'model_id': ELEVENLABS_MODEL,
-            'language_code': 'en',  # Default to English
-            'tag_audio_events': 'false',  # Don't tag audio events like laughter
-            'diarize': 'false'  # Don't annotate who is speaking
-        }
-        
-        # Send request to ElevenLabs API
-        response = requests.post(
-            ELEVENLABS_API_URL,
-            headers=headers,
-            files=files,
-            data=data
-        )
-        
-        response.raise_for_status()
-        result = response.json()
-        
-        # Extract transcription text
-        if result and "text" in result:
+    # Create multipart form data
+    with open(audio_file_path, "rb") as f:
+        audio_content = f.read()
+    
+    # Print audio file size
+    print(f"Audio file size: {len(audio_content)} bytes")
+    
+    files = {
+        'file': ('audio.wav', audio_content, 'audio/wav'),
+    }
+    
+    data = {
+        'model_id': ELEVENLABS_MODEL,
+        'language_code': 'en',  # Default to English
+        'tag_audio_events': 'false',  # Don't tag audio events like laughter
+        'diarize': 'false'  # Don't annotate who is speaking
+    }
+    
+    result = None
+    
+    # Implement retry logic
+    for attempt in range(max_retries):
+        try:
+            if attempt > 0:
+                print(f"Retry attempt {attempt+1}/{max_retries} for ElevenLabs API...")
+                time.sleep(retry_delay * attempt)  # Exponential backoff
+            
+            # Send request to ElevenLabs API
+            response = requests.post(
+                ELEVENLABS_API_URL,
+                headers=headers,
+                files=files,
+                data=data,
+                timeout=30  # Add timeout to prevent hanging
+            )
+            
+            # Print detailed response info for debugging
+            print(f"ElevenLabs API Status Code: {response.status_code}")
+            
+            # For rate limiting (429) or server errors (5xx), retry
+            if response.status_code == 429 or (response.status_code >= 500 and response.status_code < 600):
+                print(f"Received status code {response.status_code}, will retry...")
+                continue
+                
+            response.raise_for_status()
+            result = response.json()
+            
+            # Print the full response for debugging
+            print(f"ElevenLabs Response Content: {json.dumps(result, indent=2)}")
+            
+            # Success, exit retry loop
+            break
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Error on attempt {attempt+1}: {e}")
+            if hasattr(e, "response") and e.response:
+                try:
+                    error_json = e.response.json()
+                    print(f"Response status: {e.response.status_code}")
+                    print(f"Error details: {json.dumps(error_json, indent=2)}")
+                except:
+                    print(f"Response text: {e.response.text}")
+            
+            # Only retry on connection errors, timeouts, or 5xx server errors
+            if isinstance(e, (requests.exceptions.ConnectionError, 
+                             requests.exceptions.Timeout)) or \
+               (hasattr(e, "response") and e.response and 500 <= e.response.status_code < 600):
+                if attempt < max_retries - 1:  # Not the last attempt
+                    continue
+            
+            # For other exceptions, give up
+            return None
+    
+    # Extract transcription text from results
+    if result and "text" in result:
+        if result["text"].strip():  # Check if text is not empty
             return result["text"]
         else:
-            print(f"Error: Unexpected response format: {result}")
+            print("Error: ElevenLabs returned empty transcription text")
             return None
-        
-    except requests.exceptions.RequestException as e:
-        print(f"Error: Failed to transcribe audio: {e}")
-        if hasattr(e, "response") and e.response:
-            print(f"Response: {e.response.text}")
+    else:
+        if result:
+            print(f"Error: Unexpected response format from ElevenLabs: {json.dumps(result, indent=2)}")
+            # Check for common error fields
+            if "error" in result:
+                print(f"ElevenLabs Error: {result['error']}")
+            elif "detail" in result:
+                print(f"ElevenLabs Error Detail: {result['detail']}")
+        else:
+            print(f"Error: Failed to get a valid response from ElevenLabs after {max_retries} attempts")
         return None
 
-def transcribe_with_replicate(audio_file_path):
-    """Transcribe audio using Replicate Whisper API"""
+
+def transcribe_with_replicate(audio_file_path, max_retries=3, retry_delay=2):
+    """Transcribe audio using Replicate Whisper API with retry logic"""
     global g_api_key
     
     if not g_api_key:
@@ -613,11 +694,43 @@ def transcribe_with_replicate(audio_file_path):
         "Content-Type": "application/json"
     }
     
+    # Check if the audio file is valid
+    try:
+        with wave.open(audio_file_path, 'rb') as wf:
+            # Get basic info about the WAV file
+            channels = wf.getnchannels()
+            sampwidth = wf.getsampwidth()
+            framerate = wf.getframerate()
+            frames = wf.getnframes()
+            
+            # Print audio file info
+            print(f"Audio file info: {frames} frames, {framerate} Hz, {channels} channels, {sampwidth} bytes/sample")
+            
+            # Check if the audio file has content
+            if frames == 0:
+                print("Error: Audio file contains no frames")
+                return None
+                
+            # Check duration in seconds
+            duration = frames / float(framerate)
+            print(f"Audio duration: {duration:.2f} seconds")
+            
+            if duration < 0.5:
+                print("Error: Audio file is too short (less than 0.5 seconds)")
+                return None
+    except Exception as e:
+        print(f"Error checking audio file: {e}")
+        return None
+        
     # First upload the file to Replicate
     with open(audio_file_path, "rb") as f:
         # Convert audio to base64 (suitable for small files)
         import base64
         audio_content = f.read()
+        
+        # Print audio file size
+        print(f"Audio file size: {len(audio_content)} bytes")
+        
         audio_base64 = base64.b64encode(audio_content).decode('utf-8')
         audio_data_uri = f"data:audio/wav;base64,{audio_base64}"
     
@@ -630,43 +743,99 @@ def transcribe_with_replicate(audio_file_path):
         }
     }
     
-    print("Sending audio to Replicate API for transcription...")
+    print(f"Sending audio to Replicate API for transcription (with {max_retries} retries)...")
     
-    try:
-        # Create the prediction
-        response = requests.post(
-            REPLICATE_API_URL,
-            headers=headers,
-            json=data
-        )
-        
-        response.raise_for_status()
-        result = response.json()
-        prediction_id = result.get("id")
-        
-        if not prediction_id:
-            print(f"Error: Failed to create prediction: {result}")
+    prediction_id = None
+    
+    # Try to create prediction with retries
+    for attempt in range(max_retries):
+        try:
+            if attempt > 0:
+                print(f"Retry attempt {attempt+1}/{max_retries} for creating prediction...")
+                time.sleep(retry_delay * attempt)  # Exponential backoff
+                
+            # Create the prediction
+            response = requests.post(
+                REPLICATE_API_URL,
+                headers=headers,
+                json=data,
+                timeout=30  # Add timeout to prevent hanging
+            )
+            
+            # Print detailed response info for debugging
+            print(f"Replicate API Status Code: {response.status_code}")
+            
+            # For rate limiting (429) or server errors (5xx), retry
+            if response.status_code == 429 or (response.status_code >= 500 and response.status_code < 600):
+                print(f"Received status code {response.status_code}, will retry...")
+                continue
+                
+            response.raise_for_status()
+            result = response.json()
+            prediction_id = result.get("id")
+            
+            if not prediction_id:
+                print(f"Error: Failed to create prediction: {result}")
+                if attempt < max_retries - 1:
+                    continue
+                return None
+                
+            # Successfully created prediction
+            break
+                
+        except requests.exceptions.RequestException as e:
+            print(f"Error creating prediction on attempt {attempt+1}: {e}")
+            if hasattr(e, "response") and e.response:
+                try:
+                    error_json = e.response.json()
+                    print(f"Response status: {e.response.status_code}")
+                    print(f"Error details: {json.dumps(error_json, indent=2)}")
+                except:
+                    print(f"Response text: {e.response.text}")
+            
+            # Only retry on connection errors, timeouts, or 5xx server errors
+            if isinstance(e, (requests.exceptions.ConnectionError, 
+                             requests.exceptions.Timeout)) or \
+               (hasattr(e, "response") and e.response and 500 <= e.response.status_code < 600):
+                if attempt < max_retries - 1:  # Not the last attempt
+                    continue
+            
+            # For other exceptions, give up
             return None
+    
+    if not prediction_id:
+        print("Failed to create prediction after all retries")
+        return None
             
-        # Poll for the prediction result
-        get_url = f"{REPLICATE_API_URL}/{prediction_id}"
-        max_attempts = 60
-        attempt = 0
+    # Poll for the prediction result
+    get_url = f"{REPLICATE_API_URL}/{prediction_id}"
+    max_poll_attempts = 60
+    poll_attempt = 0
+    
+    while poll_attempt < max_poll_attempts:
+        poll_attempt += 1
         
-        while attempt < max_attempts:
-            attempt += 1
-            
+        try:
             # Wait before polling - shorter interval for faster response
             time.sleep(0.3)
             
             # Get prediction status
             get_response = requests.get(
                 get_url,
-                headers=headers
+                headers=headers,
+                timeout=10  # Add timeout to prevent hanging
             )
             
             if get_response.status_code != 200:
-                print(f"Error polling prediction: {get_response.text}")
+                print(f"Error polling prediction: Status code {get_response.status_code}")
+                try:
+                    error_json = get_response.json()
+                    print(f"Error details: {json.dumps(error_json, indent=2)}")
+                except:
+                    print(f"Response text: {get_response.text}")
+                # For server errors, wait a bit longer before retrying
+                if 500 <= get_response.status_code < 600:
+                    time.sleep(1)
                 continue
                 
             prediction = get_response.json()
@@ -696,14 +865,20 @@ def transcribe_with_replicate(audio_file_path):
                 print("Prediction was canceled")
                 return None
                 
-        print(f"Prediction timed out after {max_attempts} attempts")
-        return None
-    
-    except requests.exceptions.RequestException as e:
-        print(f"Error: Failed to transcribe audio: {e}")
-        if hasattr(e, "response") and e.response:
-            print(f"Response: {e.response.text}")
-        return None
+        except requests.exceptions.RequestException as e:
+            print(f"Error polling prediction: {e}")
+            if hasattr(e, "response") and e.response:
+                try:
+                    error_json = e.response.json()
+                    print(f"Response status: {e.response.status_code}")
+                    print(f"Error details: {json.dumps(error_json, indent=2)}")
+                except:
+                    print(f"Response text: {e.response.text}")
+            # Brief pause before retrying poll
+            time.sleep(1)
+                
+    print(f"Prediction timed out after {max_poll_attempts} polling attempts")
+    return None
 
 
 def signal_handler(signum, frame):
@@ -729,6 +904,7 @@ def main():
     parser.add_argument("-f", "--file", help="Output file path (for file output type)")
     parser.add_argument("-m", "--mod", help="Modifier key for hotkey (ctrl, alt, shift, cmd)")
     parser.add_argument("-g", "--key", help="Key for hotkey (f1-f12, etc.)")
+    parser.add_argument("-r", "--retries", type=int, default=3, help="Number of API retries on failure (default: 3)")
     args = parser.parse_args()
     
     # Set service type
@@ -752,6 +928,9 @@ def main():
             return 1
     
     g_api_key = api_key
+    
+    # Get retry count
+    max_retries = args.retries
     
     # Set output type
     if args.output == "clipboard":
@@ -843,6 +1022,7 @@ def main():
         print(f"Using ElevenLabs API for transcription (model: {ELEVENLABS_MODEL})")
         
     print(f"Temporary audio files will be stored in {temp_dir}")
+    print(f"API retries: {max_retries}")
     
     # Main loop
     active_recording = False
@@ -875,10 +1055,10 @@ def main():
                 transcription = None
                 if g_service == SERVICE_REPLICATE:
                     print("Using Replicate API for transcription...")
-                    transcription = transcribe_with_replicate(str(wav_path))
+                    transcription = transcribe_with_replicate(str(wav_path), max_retries=max_retries)
                 else:  # SERVICE_ELEVENLABS
                     print("Using ElevenLabs API for transcription...")
-                    transcription = transcribe_with_elevenlabs(str(wav_path))
+                    transcription = transcribe_with_elevenlabs(str(wav_path), max_retries=max_retries)
                 
                 if transcription:
                     # Process output
