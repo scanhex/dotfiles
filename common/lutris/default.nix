@@ -13,7 +13,7 @@ in
 
     config = mkIf config.my.lutris.enable {
         home-manager.users.${config.my.user}.home.packages = 
-          [pkgs.wine] 
+          [pkgs.wineWowPackages.staging]
           ++ [(pkgs.lutris.override {
               extraLibraries = pkgs: config.my.lutris.extraLibraries; 
           })];

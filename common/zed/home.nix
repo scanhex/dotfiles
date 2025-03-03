@@ -20,8 +20,10 @@ in
             package = pkgs.zed-editor;
             userSettings = {
               features = {
-                copilot = false;
+                edit_prediction_provider = "copilot";
               };
+              show_edit_predictions = true;
+              edit_predictions.mode = "eager_preview";
               telemetry = {
                 metrics = false;
               };
