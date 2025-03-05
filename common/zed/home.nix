@@ -16,8 +16,6 @@ in
     config = mkIf cfg.enable { 
         programs.zed-editor = { 
             enable = true;
-            # Using custom zed package copied from unstable nixpkgs; can be removed after next unstable update
-            package = pkgs.zed-editor;
             userSettings = {
               features = {
                 edit_prediction_provider = "copilot";

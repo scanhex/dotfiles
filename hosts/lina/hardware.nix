@@ -33,6 +33,9 @@
 
   hardware.graphics.enable = true;
   hardware.graphics.extraPackages = with pkgs; [ opencl-headers ];
+  hardware.nvidia = {
+    open = true;
+  };
 #  hardware.nvidia = { 
 #      package = config.boot.kernelPackages.nvidiaPackages.stable;
 #      modesetting.enable = true;

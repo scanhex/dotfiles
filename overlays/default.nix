@@ -6,8 +6,6 @@
       inherit system;
       config.allowUnfree = true;
     };
-    zed-editor = final.unstable.callPackage ../pkgs/by-name/ze/zed-editor/package.nix {
-    };
 #      bash-completion = prev.bash-completion.overrideAttrs (old:  
 #          {
 #          src = builtins.fetchurl {
