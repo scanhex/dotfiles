@@ -57,7 +57,7 @@
 
   users.users.${username} = {
 	  isNormalUser = true;
-	  extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" ];
+	  extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" "input" ];
 	  group = "users";
 	  home = "/home/${username}";
 	  uid = 1000;
@@ -70,6 +70,10 @@
           zotero
 	  ];
   };
+  services.udev.extraRules = ''
+    KERNEL=="event*", GROUP="input", MODE="0660"
+    KERNEL=="js*", GROUP="input", MODE="0660"
+  '';
 
   services.openssh = {
     enable = true;

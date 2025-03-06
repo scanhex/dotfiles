@@ -6,6 +6,7 @@ A lightweight dictation application using OpenAI's Whisper API for speech-to-tex
 
 - Real-time dictation using OpenAI's Whisper API
 - Global hotkey support (toggle recording with a keyboard shortcut)
+  - Cross-compositor support (X11 and Wayland)
 - Multiple output options:
   - Copy to clipboard
   - Direct paste to current application (with smart character-by-character typing)
@@ -22,7 +23,8 @@ A lightweight dictation application using OpenAI's Whisper API for speech-to-tex
 - Python dependencies (installed automatically with Nix):
   - PyAudio (for audio recording)
   - Pynput (for hotkey detection and keyboard simulation)
-  - Python-xlib (for Linux window detection)
+  - Python-xlib (for X11 window detection)
+  - Evdev (for Wayland keyboard support)
   - Numpy, requests, pyperclip (for auxiliary functionality)
 
 ## Installation
