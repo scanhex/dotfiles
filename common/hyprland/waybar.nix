@@ -10,6 +10,7 @@
 in {
   options.my.waybar.enable = lib.mkEnableOption "waybar";
   config = lib.mkIf config.my.waybar.enable {
+    hm.home.packages = [ pkgs.pwvucontrol ];
     hm.programs.waybar = {
       enable = true;
       package = pkgs.waybar;
@@ -30,11 +31,8 @@ in {
         ];
         "modules-center" = [ ];
         "modules-right" = [
-          "cpu"
-            "temperature"
-            "memory"
-            "disk"
             "tray"
+            "bluetooth"
             "pulseaudio"
             "network"
             "battery"
@@ -187,8 +185,16 @@ in {
           };
           "on-click" = "pwvucontrol";
         };
+        bluetooth= {
+          format = " {status}";
+          "format-disabled" = "";
+          "format-connected" = " {num_connections} con.";
+          "tooltip-format" = "{controller_alias}\t{controller_address}";
+          "tooltip-format-connected" = "{controller_alias}\t{controller_address}\n\n{device_enumerate}";
+          "tooltip-format-enumerate-connected" = "{device_alias}\t{device_address}";
+          "on-click" = "GDK_DPI_SCALE=0.75 blueman-manager";
+        };
       }
-
       ];
       style = lib.concatStrings [
         ''
@@ -349,11 +355,23 @@ background: @bg_hover;
 
 #pulseaudio {
   font-family: "JetBrainsMono Nerd Font";
-  padding-left: 3px;
+  padding-left: 5px;
   padding-right: 3px;
 transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 #pulseaudio:hover {
+background: @bg_hover;
+}
+
+#bluetooth {
+  font-family: "JetBrainsMono Nerd Font";
+  padding-left: 3px;
+  padding-right: 3px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+#bluetooth:hover {
 background: @bg_hover;
 }
 
