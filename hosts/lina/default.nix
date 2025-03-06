@@ -64,6 +64,7 @@
 	  shell = pkgs.bash;
 	  packages = with pkgs; [
 		  google-chrome
+		  firefox
           discord
           telegram-desktop
           zotero
