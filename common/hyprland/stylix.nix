@@ -3,7 +3,7 @@
   imports = [ inputs.stylix.nixosModules.stylix ];
   config = lib.mkIf config.my.stylix.enable {
     stylix = {
-      enable = true;
+      enable = false;
       image = ./beautifulmountainscape.jpg;
       base16Scheme = {
         base00 = "282936";

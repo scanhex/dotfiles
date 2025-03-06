@@ -14,153 +14,151 @@ in {
       enable = true;
       package = pkgs.waybar;
       settings = [
-        {
-          layer = "top";
-          position = "top";
-          modules-center = ["hyprland/workspaces"];
-          modules-left = [
-            "custom/startmenu"
-            "hyprland/window"
-            "pulseaudio"
-            "cpu"
+      {
+        layer = "bottom";
+        position = "bottom";
+        mod = "dock";
+        exclusive = true;
+        "gtk-layer-shell" = true;
+        "margin-bottom" = -1;
+        passthrough = false;
+        height = 41;
+        "modules-left" = [
+          "custom/os_button"
+            "hyprland/workspaces"
+            "wlr/taskbar"
+        ];
+        "modules-center" = [ ];
+        "modules-right" = [
+          "cpu"
+            "temperature"
             "memory"
-            "idle_inhibitor"
-          ];
-          modules-right = [
-            "custom/hyprbindings"
-            "custom/notification"
-            "custom/exit"
-            "battery"
+            "disk"
             "tray"
+            "pulseaudio"
+            "network"
+            "battery"
+            "hyprland/language"
             "clock"
-          ];
+        ];
 
-          "hyprland/workspaces" = {
-            format = "{name}";
-            format-icons = {
-              default = " ";
-              active = " ";
-              urgent = " ";
+        "hyprland/language" = {
+          format = "{}";
+          "format-en" = "ENG";
+          "format-ru" = "РУС";
+        };
+
+        "hyprland/workspaces" = {
+          "icon-size" = 32;
+          spacing = 16;
+          "on-scroll-up" = "hyprctl dispatch workspace r+1";
+          "on-scroll-down" = "hyprctl dispatch workspace r-1";
+        };
+
+        "custom/os_button" = {
+          format = "";
+          "on-click" = "wofi --show drun";
+          tooltip = false;
+        };
+
+        cpu = {
+          interval = 5;
+          format = "  {usage}%";
+          "max-length" = 10;
+        };
+
+        temperature = {
+          "hwmon-path-abs" = "/sys/devices/platform/coretemp.0/hwmon";
+          "input-filename" = "temp2_input";
+          "critical-threshold" = 75;
+          tooltip = false;
+          "format-critical" = "({temperatureC}°C)";
+          format = "({temperatureC}°C)";
+        };
+
+        disk = {
+          interval = 30;
+          format = "󰋊 {percentage_used}%";
+          path = "/";
+          tooltip = true;
+          unit = "GB";
+          "tooltip-format" = "Available {free} of {total}";
+        };
+
+        memory = {
+          interval = 10;
+          format = "  {percentage}%";
+          "max-length" = 10;
+          tooltip = true;
+          "tooltip-format" = "RAM - {used:0.1f}GiB used";
+        };
+
+        "wlr/taskbar" = {
+          format = "{icon}";
+          "icon-size" = 28;
+          spacing = 3;
+          "on-click-middle" = "close";
+          "tooltip-format" = "{title}";
+          "ignore-list" = [ ];
+          "on-click" = "activate";
+        };
+
+        tray = {
+          "icon-size" = 18;
+          spacing = 3;
+        };
+
+        clock = {
+          format = "      {:%R\n %d.%m.%Y}";
+          "tooltip-format" = "<tt><small>{calendar}</small></tt>";
+          calendar = {
+            mode = "year";
+            "mode-mon-col" = 3;
+            "weeks-pos" = "right";
+            "on-scroll" = 1;
+            "on-click-right" = "mode";
+            format = {
+              months = "<span color='#ffead3'><b>{}</b></span>";
+              days = "<span color='#ecc6d9'><b>{}</b></span>";
+              weeks = "<span color='#99ffdd'><b>W{}</b></span>";
+              weekdays = "<span color='#ffcc66'><b>{}</b></span>";
+              today = "<span color='#ff6699'><b><u>{}</u></b></span>";
             };
-            on-scroll-up = "hyprctl dispatch workspace e+1";
-            on-scroll-down = "hyprctl dispatch workspace e-1";
           };
-          "clock" = {
-            format = '' {:L%I:%M %p}'';
-            tooltip = true;
-            tooltip-format = "<big>{:%A, %d.%B %Y }</big>\n<tt><small>{calendar}</small></tt>";
+          actions = {
+            "on-click-right" = "mode";
+            "on-click-forward" = "tz_up";
+            "on-click-backward" = "tz_down";
+            "on-scroll-up" = "shift_up";
+            "on-scroll-down" = "shift_down";
           };
-          "hyprland/window" = {
-            max-length = 22;
-            separate-outputs = false;
-            rewrite = {
-              "" = " 🙈 No Windows? ";
-            };
+        };
+
+        network = {
+          "format-wifi" = " {icon}";
+          "format-ethernet" = "  ";
+          "format-disconnected" = "󰌙";
+          "format-icons" = [
+            "󰤯 "
+              "󰤟 "
+              "󰤢 "
+              "󰤢 "
+              "󰤨 "
+          ];
+        };
+
+        battery = {
+          states = {
+            good = 95;
+            warning = 30;
+            critical = 20;
           };
-          "memory" = {
-            interval = 5;
-            format = " {}%";
-            tooltip = true;
-          };
-          "cpu" = {
-            interval = 5;
-            format = " {usage:2}%";
-            tooltip = true;
-          };
-          "disk" = {
-            format = " {free}";
-            tooltip = true;
-          };
-          "network" = {
-            format-icons = [
-              "󰤯"
-              "󰤟"
-              "󰤢"
-              "󰤥"
-              "󰤨"
-            ];
-            format-ethernet = " {bandwidthDownOctets}";
-            format-wifi = "{icon} {signalStrength}%";
-            format-disconnected = "󰤮";
-            tooltip = false;
-          };
-          "tray" = {
-            spacing = 12;
-          };
-          "pulseaudio" = {
-            format = "{icon} {volume}% {format_source}";
-            format-bluetooth = "{volume}% {icon} {format_source}";
-            format-bluetooth-muted = " {icon} {format_source}";
-            format-muted = " {format_source}";
-            format-source = " {volume}%";
-            format-source-muted = "";
-            format-icons = {
-              headphone = "";
-              hands-free = "";
-              headset = "";
-              phone = "";
-              portable = "";
-              car = "";
-              default = [
-                ""
-                ""
-                ""
-              ];
-            };
-            on-click = "sleep 0.1 && pavucontrol";
-          };
-          "custom/exit" = {
-            tooltip = false;
-            format = "";
-            on-click = "sleep 0.1 && wlogout";
-          };
-          "custom/startmenu" = {
-            tooltip = false;
-            format = "";
-            # exec = "rofi -show drun";
-            on-click = "sleep 0.1 && rofi-launcher";
-          };
-          "custom/hyprbindings" = {
-            tooltip = false;
-            format = "󱕴";
-            on-click = "sleep 0.1 && list-keybinds";
-          };
-          "idle_inhibitor" = {
-            format = "{icon}";
-            format-icons = {
-              activated = "";
-              deactivated = "";
-            };
-            tooltip = "true";
-          };
-          "custom/notification" = {
-            tooltip = false;
-            format = "{icon} {}";
-            format-icons = {
-              notification = "<span foreground='red'><sup></sup></span>";
-              none = "";
-              dnd-notification = "<span foreground='red'><sup></sup></span>";
-              dnd-none = "";
-              inhibited-notification = "<span foreground='red'><sup></sup></span>";
-              inhibited-none = "";
-              dnd-inhibited-notification = "<span foreground='red'><sup></sup></span>";
-              dnd-inhibited-none = "";
-            };
-            return-type = "json";
-            exec-if = "which swaync-client";
-            exec = "swaync-client -swb";
-            on-click = "sleep 0.1 && task-waybar";
-            escape = true;
-          };
-          "battery" = {
-            states = {
-              warning = 30;
-              critical = 15;
-            };
-            format = "{icon} {capacity}%";
-            format-charging = "󰂄 {capacity}%";
-            format-plugged = "󱘖 {capacity}%";
-            format-icons = [
+          format = "{icon} {capacity}%";
+          "format-charging" = " {capacity}%";
+          "format-plugged" = " {capacity}%";
+          "format-alt" = "{time} {icon}";
+          "format-icons" = [
+            "󰂎"
               "󰁺"
               "󰁻"
               "󰁼"
@@ -171,104 +169,213 @@ in {
               "󰂁"
               "󰂂"
               "󰁹"
+          ];
+        };
+
+        pulseaudio = {
+          "max-volume" = 150;
+          "scroll-step" = 10;
+          format = "{icon}";
+          "tooltip-format" = "{volume}%";
+          "format-muted" = " ";
+          "format-icons" = {
+            default = [
+              " "
+                " "
+                " "
             ];
-            on-click = "";
-            tooltip = false;
           };
-        }
+          "on-click" = "pwvucontrol";
+        };
+      }
+
       ];
       style = lib.concatStrings [
         ''
-          * {
-            font-family: JetBrainsMono Nerd Font Mono;
-            font-size: 16px;
-            border-radius: 0px;
-            border: none;
-            min-height: 0px;
-          }
-          window#waybar {
-            background: rgba(0,0,0,0);
-          }
-          #workspaces {
-            color: #${config.lib.stylix.colors.base00};
-            background: #${config.lib.stylix.colors.base01};
-            margin: 4px 4px;
-            padding: 5px 5px;
-            border-radius: 16px;
-          }
-          #workspaces button {
-            font-weight: bold;
-            padding: 0px 5px;
-            margin: 0px 3px;
-            border-radius: 16px;
-            color: #${config.lib.stylix.colors.base00};
-            background: linear-gradient(45deg, #${config.lib.stylix.colors.base08}, #${config.lib.stylix.colors.base0D});
-            opacity: 0.5;
-            transition: ${betterTransition};
-          }
-          #workspaces button.active {
-            font-weight: bold;
-            padding: 0px 5px;
-            margin: 0px 3px;
-            border-radius: 16px;
-            color: #${config.lib.stylix.colors.base00};
-            background: linear-gradient(45deg, #${config.lib.stylix.colors.base08}, #${config.lib.stylix.colors.base0D});
-            transition: ${betterTransition};
-            opacity: 1.0;
-            min-width: 40px;
-          }
-          #workspaces button:hover {
-            font-weight: bold;
-            border-radius: 16px;
-            color: #${config.lib.stylix.colors.base00};
-            background: linear-gradient(45deg, #${config.lib.stylix.colors.base08}, #${config.lib.stylix.colors.base0D});
-            opacity: 0.8;
-            transition: ${betterTransition};
-          }
-          tooltip {
-            background: #${config.lib.stylix.colors.base00};
-            border: 1px solid #${config.lib.stylix.colors.base08};
-            border-radius: 12px;
-          }
-          tooltip label {
-            color: #${config.lib.stylix.colors.base08};
-          }
-          #window, #pulseaudio, #cpu, #memory, #idle_inhibitor {
-            font-weight: bold;
-            margin: 4px 0px;
-            margin-left: 7px;
-            padding: 0px 18px;
-            background: #${config.lib.stylix.colors.base04};
-            color: #${config.lib.stylix.colors.base00};
-            border-radius: 24px 10px 24px 10px;
-          }
-          #custom-startmenu {
-            color: #${config.lib.stylix.colors.base0B};
-            background: #${config.lib.stylix.colors.base02};
-            font-size: 28px;
-            margin: 0px;
-            padding: 0px 30px 0px 15px;
-            border-radius: 0px 0px 40px 0px;
-          }
-          #custom-hyprbindings, #network, #battery,
-          #custom-notification, #tray, #custom-exit {
-            font-weight: bold;
-            background: #${config.lib.stylix.colors.base0F};
-            color: #${config.lib.stylix.colors.base00};
-            margin: 4px 0px;
-            margin-right: 7px;
-            border-radius: 10px 24px 10px 24px;
-            padding: 0px 18px;
-          }
-          #clock {
-            font-weight: bold;
-            color: #0D0E15;
-            background: linear-gradient(90deg, #${config.lib.stylix.colors.base0E}, #${config.lib.stylix.colors.base0C});
-            margin: 0px;
-            padding: 0px 15px 0px 30px;
-            border-radius: 0px 0px 0px 40px;
-          }
-        ''
+
+          /*base background color*/
+          @define-color bg_main rgba(25, 25, 25, 0.65);
+      @define-color bg_main_tooltip rgba(0, 0, 0, 0.7);
+
+
+      /*base background color of selections */
+      @define-color bg_hover rgba(200, 200, 200, 0.3);
+      /*base background color of active elements */
+      @define-color bg_active rgba(100, 100, 100, 0.5);
+
+      /*base border color*/
+      @define-color border_main rgba(255, 255, 255, 0.2);
+
+      /*text color for entries, views and content in general */
+      @define-color content_main white;
+      /*text color for entries that are unselected */
+      @define-color content_inactive rgba(255, 255, 255, 0.25);
+
+      * {
+        text-shadow: none;
+        box-shadow: none;
+border: none;
+        border-radius: 0;
+        font-family: "Segoe UI", "Ubuntu";
+        font-weight: 600;
+        font-size: 12.7px;
+
+
+      }
+
+      window#waybar {
+background:  @bg_main;
+             border-top: 1px solid @border_main;
+color: @content_main;
+      }
+
+      tooltip {
+background: @bg_main_tooltip;
+            border-radius: 5px;
+            border-width: 1px;
+            border-style: solid;
+            border-color: @border_main;
+      }
+      tooltip label{
+color: @content_main;
+      }
+
+#custom-os_button {
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 24px;
+  padding-left: 12px;
+  padding-right: 20px;
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+#custom-os_button:hover {
+background:  @bg_hover;
+color: @content_main;
+}
+
+#workspaces {
+color: transparent;
+       margin-right: 1.5px;
+       margin-left: 1.5px;
+}
+#workspaces button {
+padding: 3px;
+color: @content_inactive;
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+#workspaces button.active {
+color: @content_main;
+       border-bottom: 3px solid white;
+}
+#workspaces button.focused {
+color: @bg_active;
+}
+#workspaces button.urgent {
+background:  rgba(255, 200, 0, 0.35);
+             border-bottom: 3px dashed @warning_color;
+color: @warning_color;
+}
+#workspaces button:hover {
+background: @bg_hover;
+color: @content_main;
+}
+
+#taskbar {
+}
+
+#taskbar button {
+  /* min-width: 130px; */
+  border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+  margin-left: 2px;
+  margin-right: 2px;
+  padding-left: 8px;
+  padding-right: 8px;
+color: white;
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+#taskbar button.active {
+  border-bottom: 3px solid white;
+background: @bg_active;
+}
+
+#taskbar button:hover {
+  border-bottom: 3px solid white;
+background: @bg_hover;
+color: @content_main;
+}
+
+#cpu, #disk, #memory {
+padding:3px;
+}
+
+#temperature {
+color: transparent;
+       font-size: 0px;
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+#temperature.critical {
+  padding-right: 3px;
+color: @warning_color;
+       font-size: initial;
+       border-bottom: 3px dashed @warning_color;
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+#window {
+  border-radius: 10px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+#tray{
+  margin-left: 5px;
+  margin-right: 5px;
+}
+#tray > .passive {
+  border-bottom: none;
+}
+#tray > .active {
+  border-bottom: 3px solid white;
+}
+#tray > .needs-attention {
+  border-bottom: 3px solid @warning_color;
+}
+#tray > widget {
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+#tray > widget:hover {
+background: @bg_hover;
+}
+
+#pulseaudio {
+  font-family: "JetBrainsMono Nerd Font";
+  padding-left: 3px;
+  padding-right: 3px;
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+#pulseaudio:hover {
+background: @bg_hover;
+}
+
+#network {
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+#language {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#clock {
+  padding-right: 5px;
+  padding-left: 5px;
+transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+#clock:hover {
+background: @bg_hover;
+}
+''
       ];
     };
   };
