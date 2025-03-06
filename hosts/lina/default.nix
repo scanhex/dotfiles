@@ -16,7 +16,7 @@
 #      desktopManager.cinnamon.enable = true;
       desktopManager.gnome.enable = true;
   };
-  services.displayManager.defaultSession = "plasma";
+  services.displayManager.defaultSession = "hyprland";
 #  services.displayManager.sddm = { 
 #    enable = true;
 #    wayland.enable = true;
@@ -24,9 +24,8 @@
 #      General.GreeterEnvironment = "QT_SCREEN_SCALE_FACTORS=2";
 #    };
 #  };
-  services.desktopManager.plasma6.enable = true;
-
-
+#  services.desktopManager.plasma6.enable = true;
+  my.hyprland.enable = true;
 
   home-manager.users.${username} = {
     home.packages = with pkgs; [
