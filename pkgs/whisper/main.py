@@ -170,29 +170,21 @@ class AudioRecorder:
 
 
 class GlobalHotkeyListener:
-    """Global hotkey listener implementation with Wayland support"""
+    """Base global hotkey listener implementation for X11 and other platforms"""
     
     def __init__(self, modifier_key, main_key):
         self.modifier_pressed = False
         self.modifier_key = modifier_key
         self.main_key = main_key
         self.listener = None
-        self.is_evdev_available = False
-        self.evdev_thread = None
         self.is_running = True
         
-        # Try to determine if we're running under Wayland
+        # Check if we're running under Wayland
         self.is_wayland = 'WAYLAND_DISPLAY' in os.environ
-        
-        # Keep track of evdev devices if using evdev
-        self.evdev_devices = []
     
     def on_press(self, key):
-        """Handle key press events for X11/non-Wayland"""
+        """Handle key press events"""
         try:
-            # Debug output for key presses
-            # print(f"Key pressed: {key}")
-            
             # Check if this is our modifier key
             if key == self.modifier_key:
                 self.modifier_pressed = True
@@ -209,7 +201,7 @@ class GlobalHotkeyListener:
         return True  # Continue listening
     
     def on_release(self, key):
-        """Handle key release events for X11/non-Wayland"""
+        """Handle key release events"""
         try:
             if key == self.modifier_key:
                 self.modifier_pressed = False
@@ -218,146 +210,12 @@ class GlobalHotkeyListener:
         
         return True  # Continue listening
     
-    def _run_evdev_listener(self):
-        """Run evdev-based keyboard listener for Wayland"""
-        try:
-            from evdev import InputDevice, categorize, ecodes, list_devices, KeyEvent
-            import select
-            
-            # Map pynput Key objects to evdev key codes
-            ctrl_keys = [ecodes.KEY_LEFTCTRL, ecodes.KEY_RIGHTCTRL]
-            alt_keys = [ecodes.KEY_LEFTALT, ecodes.KEY_RIGHTALT]
-            shift_keys = [ecodes.KEY_LEFTSHIFT, ecodes.KEY_RIGHTSHIFT]
-            meta_keys = [ecodes.KEY_LEFTMETA, ecodes.KEY_RIGHTMETA]
-            
-            # Determine which modifier keys to listen for
-            modifier_keys = []
-            if self.modifier_key == keyboard.Key.ctrl:
-                modifier_keys = ctrl_keys
-            elif self.modifier_key == keyboard.Key.alt:
-                modifier_keys = alt_keys
-            elif self.modifier_key == keyboard.Key.shift:
-                modifier_keys = shift_keys
-            elif self.modifier_key == keyboard.Key.cmd:
-                modifier_keys = meta_keys
-            
-            # Determine main key to listen for
-            main_key = None
-            if self.main_key == keyboard.Key.f1:
-                main_key = ecodes.KEY_F1
-            elif self.main_key == keyboard.Key.f2:
-                main_key = ecodes.KEY_F2
-            elif self.main_key == keyboard.Key.f3:
-                main_key = ecodes.KEY_F3
-            elif self.main_key == keyboard.Key.f4:
-                main_key = ecodes.KEY_F4
-            elif self.main_key == keyboard.Key.f5:
-                main_key = ecodes.KEY_F5
-            elif self.main_key == keyboard.Key.f6:
-                main_key = ecodes.KEY_F6
-            elif self.main_key == keyboard.Key.f7:
-                main_key = ecodes.KEY_F7
-            elif self.main_key == keyboard.Key.f8:
-                main_key = ecodes.KEY_F8
-            elif self.main_key == keyboard.Key.f9:
-                main_key = ecodes.KEY_F9
-            elif self.main_key == keyboard.Key.f10:
-                main_key = ecodes.KEY_F10
-            elif self.main_key == keyboard.Key.f11:
-                main_key = ecodes.KEY_F11
-            elif self.main_key == keyboard.Key.f12:
-                main_key = ecodes.KEY_F12
-            
-            # Check if we found a valid mapping
-            if not modifier_keys or main_key is None:
-                print("Warning: Could not map hotkey to evdev keys. Falling back to standard listener.")
-                return
-            
-            # Find keyboard devices
-            devices = []
-            try:
-                device_paths = list_devices()
-                for path in device_paths:
-                    try:
-                        device = InputDevice(path)
-                        if ecodes.EV_KEY in device.capabilities():
-                            # This is likely a keyboard or has keyboard-like input
-                            devices.append(device)
-                            print(f"Found input device: {device.path} ({device.name})")
-                    except Exception as e:
-                        print(f"Error opening device {path}: {e}")
-            except Exception as e:
-                print(f"Error listing input devices: {e}")
-            
-            if not devices:
-                print("Warning: No input devices found. Evdev listener will not work.")
-                return
-            
-            # Store devices for cleanup
-            self.evdev_devices = devices
-            
-            print(f"Evdev listener started with {len(devices)} devices")
-            print(f"Listening for modifier keys {modifier_keys} and main key {main_key}")
-            
-            # Track modifier state
-            modifier_state = False
-            
-            # Main evdev listening loop
-            while self.is_running:
-                # Wait for events on any device with a 0.1 second timeout
-                r, w, x = select.select(devices, [], [], 0.1)
-                
-                for device in r:
-                    try:
-                        for event in device.read():
-                            if event.type == ecodes.EV_KEY:
-                                key_event = categorize(event)
-                                
-                                # Check for modifier keys
-                                if key_event.scancode in modifier_keys:
-                                    modifier_state = key_event.keystate == KeyEvent.key_down
-                                
-                                # Check for main key when modifier is pressed
-                                elif key_event.scancode == main_key and key_event.keystate == KeyEvent.key_down:
-                                    if modifier_state:
-                                        with g_mutex:
-                                            global g_toggle_recording
-                                            g_toggle_recording = True
-                                            print("Hotkey combination detected (evdev)! Toggling recording...")
-                    except Exception as e:
-                        print(f"Error reading from device {device.path}: {e}")
-        
-        except ImportError:
-            print("Warning: evdev package not available. Wayland hotkeys will not work.")
-            print("Install evdev package to enable Wayland support.")
-        except Exception as e:
-            print(f"Error in evdev listener: {e}")
-    
     def start(self):
-        """Start the keyboard listener with appropriate backend"""
-        if self.is_wayland:
-            try:
-                # Try to import evdev
-                import evdev
-                import select
-                self.is_evdev_available = True
-            except ImportError:
-                self.is_evdev_available = False
-                print("Warning: evdev package not installed. Hotkeys may not work under Wayland.")
-                print("Install evdev package for Wayland support.")
-        
-        if self.is_wayland and self.is_evdev_available:
-            # Use evdev for Wayland
-            print("Starting evdev-based hotkey listener for Wayland")
-            self.evdev_thread = threading.Thread(target=self._run_evdev_listener)
-            self.evdev_thread.daemon = True
-            self.evdev_thread.start()
-        else:
-            # Use pynput for X11 and other platforms
-            print("Starting pynput-based hotkey listener")
-            self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
-            self.listener.daemon = True
-            self.listener.start()
+        """Start the keyboard listener"""
+        print("Starting pynput-based hotkey listener")
+        self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+        self.listener.daemon = True
+        self.listener.start()
     
     def stop(self):
         """Stop the keyboard listener"""
@@ -365,16 +223,242 @@ class GlobalHotkeyListener:
         
         if self.listener:
             self.listener.stop()
+
+
+class EvdevHotkeyListener:
+    """Global hotkey listener implementation for Wayland using evdev"""
+    
+    def __init__(self, modifier_key, main_key):
+        """
+        Initialize an evdev-based hotkey listener
         
-        if self.evdev_thread:
-            self.evdev_thread.join(timeout=1.0)
+        :param modifier_key: a pynput.keyboard.Key representing the modifier (e.g., Key.ctrl)
+        :param main_key: a pynput.keyboard.Key representing the main key (e.g., Key.f9)
+        """
+        self.modifier_key = modifier_key
+        self.main_key = main_key
+        self.is_running = False
+        
+        # For storing active devices by path: path -> InputDevice
+        self.devices = {}
+        
+        # Convert pynput keys -> evdev codes
+        self.modifier_codes = []
+        self.main_code = None
+        try:
+            from evdev import ecodes
+            self.modifier_codes = self._map_modifier(self.modifier_key)
+            self.main_code = self._map_main_key(self.main_key)
             
-        # Close any open evdev devices
-        for device in self.evdev_devices:
+            if not self.modifier_codes or self.main_code is None:
+                print("Warning: Could not map hotkey to evdev keys. Hotkeys will not work.")
+        except ImportError:
+            print("Warning: evdev package not installed. Hotkeys may not work under Wayland.")
+            print("Install evdev package for Wayland support.")
+        
+        # Track whether modifier is pressed
+        self.modifier_state = False
+        
+        # A separate thread to handle evdev reading
+        self.thread = None
+
+    def start(self):
+        """Start the evdev hotkey listener in a background thread."""
+        # If there's no valid mapping, do nothing
+        if not self.modifier_codes or self.main_code is None:
+            return
+        
+        self.is_running = True
+        print("Starting evdev-based hotkey listener for Wayland")
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self.thread.start()
+
+    def stop(self):
+        """Stop the evdev hotkey listener."""
+        self.is_running = False
+        if self.thread is not None:
+            self.thread.join(timeout=1.0)
+        # Close devices
+        for dev in self.devices.values():
+            try:
+                dev.close()
+            except Exception:
+                pass
+        self.devices.clear()
+
+    def _map_modifier(self, key):
+        """Map a pynput Key to corresponding evdev keycodes."""
+        from evdev import ecodes
+        from pynput import keyboard
+        
+        if key == keyboard.Key.ctrl:
+            return [ecodes.KEY_LEFTCTRL, ecodes.KEY_RIGHTCTRL]
+        elif key == keyboard.Key.alt:
+            return [ecodes.KEY_LEFTALT, ecodes.KEY_RIGHTALT]
+        elif key == keyboard.Key.shift:
+            return [ecodes.KEY_LEFTSHIFT, ecodes.KEY_RIGHTSHIFT]
+        elif key == keyboard.Key.cmd:
+            return [ecodes.KEY_LEFTMETA, ecodes.KEY_RIGHTMETA]
+        return []
+
+    def _map_main_key(self, key):
+        """Map a pynput Key (F1-F12, etc.) to an evdev code."""
+        from evdev import ecodes
+        from pynput import keyboard
+        
+        if key == keyboard.Key.f1: return ecodes.KEY_F1
+        if key == keyboard.Key.f2: return ecodes.KEY_F2
+        if key == keyboard.Key.f3: return ecodes.KEY_F3
+        if key == keyboard.Key.f4: return ecodes.KEY_F4
+        if key == keyboard.Key.f5: return ecodes.KEY_F5
+        if key == keyboard.Key.f6: return ecodes.KEY_F6
+        if key == keyboard.Key.f7: return ecodes.KEY_F7
+        if key == keyboard.Key.f8: return ecodes.KEY_F8
+        if key == keyboard.Key.f9: return ecodes.KEY_F9
+        if key == keyboard.Key.f10: return ecodes.KEY_F10
+        if key == keyboard.Key.f11: return ecodes.KEY_F11
+        if key == keyboard.Key.f12: return ecodes.KEY_F12
+        return None
+
+    def _run(self):
+        """Main loop: periodically scan devices and read events."""
+        try:
+            from evdev import InputDevice, categorize, ecodes, list_devices, KeyEvent
+            import select
+            
+            print("Evdev listener starting...")
+            while self.is_running:
+                # Re-scan the devices in case something was plugged in or removed
+                self._scan_devices()
+                
+                if not self.devices:
+                    import time
+                    time.sleep(0.2)
+                    continue
+                
+                # Use select to wait for events
+                r, _, _ = select.select(self.devices.values(), [], [], 0.2)
+                
+                for device in r:
+                    try:
+                        for event in device.read():
+                            if event.type == ecodes.EV_KEY:
+                                key_event = categorize(event)
+                                # Check for modifier keys
+                                if key_event.scancode in self.modifier_codes:
+                                    self.modifier_state = (key_event.keystate == KeyEvent.key_down)
+                                
+                                # Check for main key while modifier is pressed
+                                elif (key_event.scancode == self.main_code and 
+                                      key_event.keystate == KeyEvent.key_down and
+                                      self.modifier_state):
+                                    with g_mutex:
+                                        global g_toggle_recording
+                                        g_toggle_recording = True
+                                        print("Hotkey combination detected (evdev)! Toggling recording...")
+                    except OSError as e:
+                        # Typically means device is gone: remove it
+                        print(f"Device {device.path} disconnected ({e}). Removing from listener.")
+                        self._remove_device(device)
+                    except Exception as e:
+                        print(f"Error reading from device {device.path}: {e}")
+                        # Remove on errors
+                        self._remove_device(device)
+        except ImportError:
+            print("Error: evdev module not available. Wayland hotkeys will not work.")
+        except Exception as e:
+            print(f"Error in evdev listener: {e}")
+
+    def _scan_devices(self):
+        """Enumerate available devices, add new ones that look like keyboards, and remove any that disappeared."""
+        try:
+            from evdev import InputDevice, list_devices, ecodes
+            
+            current_paths = set(list_devices())
+            known_paths = set(self.devices.keys())
+            
+            # Remove any that are no longer there
+            for path in (known_paths - current_paths):
+                self._remove_device(self.devices[path])
+            
+            # Add new devices
+            for path in (current_paths - known_paths):
+                try:
+                    dev = InputDevice(path)
+                    # Check if device is a keyboard
+                    if self._is_keyboard(dev):
+                        self.devices[path] = dev
+                        print(f"Added keyboard device: {path} ({dev.name})")
+                    else:
+                        dev.close()
+                except Exception as e:
+                    print(f"Skipping device {path} due to error: {e}")
+        except Exception as e:
+            print(f"Error scanning devices: {e}")
+    
+    def _remove_device(self, device):
+        """Safely remove a device from the active set."""
+        path = device.path
+        if path in self.devices:
             try:
                 device.close()
-            except:
+            except Exception:
                 pass
+            del self.devices[path]
+            print(f"Removed device: {path}")
+
+    def _is_keyboard(self, device):
+        """
+        Return True if the device appears to be a keyboard.
+        A simple heuristic:
+          - It has EV_KEY capability
+          - It supports at least one typical keyboard key (like KEY_A or KEY_SPACE).
+        """
+        try:
+            from evdev import ecodes
+            
+            if ecodes.EV_KEY not in device.capabilities():
+                return False
+            
+            key_caps = device.capabilities()[ecodes.EV_KEY]
+            # Convert possible tuples to a flat list of keys
+            if isinstance(key_caps, list):
+                all_keys = key_caps
+            else:
+                # Sometimes capabilities can be dict-like with (code, desc) pairs
+                all_keys = []
+                for group in key_caps:
+                    if isinstance(group, tuple):
+                        all_keys.append(group[0])
+                    else:
+                        all_keys.append(group)
+
+            # Check typical keyboard keys
+            typical_keyboard_keys = [ecodes.KEY_A, ecodes.KEY_B, ecodes.KEY_C,
+                                     ecodes.KEY_SPACE, ecodes.KEY_ENTER, ecodes.KEY_LEFTSHIFT]
+            
+            return any(k in all_keys for k in typical_keyboard_keys)
+        except Exception as e:
+            print(f"Error checking if device is a keyboard: {e}")
+            return False
+
+
+def create_appropriate_listener(modifier_key, main_key):
+    """Create the appropriate hotkey listener based on environment"""
+    # Check if we're running under Wayland
+    is_wayland = 'WAYLAND_DISPLAY' in os.environ
+    
+    if is_wayland:
+        try:
+            # Check if evdev is available
+            import evdev
+            print("Detected Wayland environment, using evdev hotkey listener")
+            return EvdevHotkeyListener(modifier_key, main_key)
+        except ImportError:
+            print("Evdev not available, falling back to standard listener")
+    
+    # Use standard listener for non-Wayland or if evdev not available
+    return GlobalHotkeyListener(modifier_key, main_key)
 
 
 def keyboard_input_monitor():
@@ -1171,7 +1255,7 @@ def main():
     
     # Start hotkey listener
     print(f"Setting up global hotkey: {modifier_key}+{main_key}")
-    hotkey_listener = GlobalHotkeyListener(modifier_key, main_key)
+    hotkey_listener = create_appropriate_listener(modifier_key, main_key)
     hotkey_listener.start()
     
     # Start input monitoring thread as fallback

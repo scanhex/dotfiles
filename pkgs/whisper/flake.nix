@@ -30,11 +30,20 @@
           
           src = ./.;
           
-          buildInputs = [ pythonEnv ];
+          buildInputs = [ pythonEnv pkgs.wtype ];
           
           installPhase = ''
             mkdir -p $out/bin
             cp main.py $out/bin/whisper-dictation
+            chmod +x $out/bin/whisper-dictation
+            
+            # Create wrapper to ensure PATH includes wtype
+            mv $out/bin/whisper-dictation $out/bin/.whisper-dictation-unwrapped
+            cat > $out/bin/whisper-dictation << EOF
+            #!/bin/sh
+            export PATH="${pkgs.wtype}/bin:\$PATH"
+            exec $out/bin/.whisper-dictation-unwrapped "\$@"
+            EOF
             chmod +x $out/bin/whisper-dictation
           '';
         };
