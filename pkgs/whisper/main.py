@@ -497,7 +497,9 @@ def is_text_application():
             
         elif sys.platform.startswith("linux"):  # Linux
             try:
-                # Use python-xlib to get active window info
+                if is_wayland():
+                    # TODO - Implement Wayland window detection
+                    return True 
                 from Xlib import display, X
                 from Xlib.error import DisplayError, BadWindow
                 

@@ -65,7 +65,7 @@
 	  packages = with pkgs; [
 		  google-chrome
 		  firefox
-          discord
+          unstable.discord-canary
           telegram-desktop
           zotero
 	  ];

@@ -18,5 +18,12 @@
       "Xft.antialias" = 1;
       "Xft.rgba" = "rgb";
     };
+    hm.home.pointerCursor = {
+      name = "Bibata-Modern-Ice";
+      package = pkgs.bibata-cursors;
+      size = 24;
+      gtk.enable = true;
+      x11.enable = true; # Important for X applications
+    };
   };
 }
