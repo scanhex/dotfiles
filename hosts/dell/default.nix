@@ -73,6 +73,7 @@
   time.timeZone = "America/New_York";
 
   hm.my.wezterm.enable = true;
+  my.work.enable = true;
 
   environment.systemPackages = with pkgs; [
     kdePackages.plasma-thunderbolt

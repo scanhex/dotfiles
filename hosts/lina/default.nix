@@ -121,6 +121,7 @@
   hm.my.ghostty.enable = true;
   hm.my.zed.enable = true;
   my.lutris.enable = true;
+  my.work.enable = true;
 
   nix.settings = {
       substituters = [ "https://cache.nixos.org" "https://nix-community.cachix.org" "https://cuda-maintainers.cachix.org" ];
