@@ -3,7 +3,11 @@
   options.my.hyprland.enable = lib.mkEnableOption "hyprland";
   imports = [ ./waybar.nix ./stylix.nix ];
   config = lib.mkIf config.my.hyprland.enable {
-    programs.hyprland.enable = true;
+    programs.hyprland.enable = true; # needed?
+    hm.wayland.windowManager.hyprland = {
+      enable = true;
+      extraConfig = lib.readFile ./hyprland.conf;
+    };
     services.playerctld.enable = true;
     hm.programs.tofi.enable = true;
     hm.home.packages = [ pkgs.blueman pkgs.xorg.xrdb ];
