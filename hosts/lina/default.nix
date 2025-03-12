@@ -57,7 +57,7 @@
 
   users.users.${username} = {
 	  isNormalUser = true;
-	  extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" "input" ];
+	  extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" "input" "docker" ];
 	  group = "users";
 	  home = "/home/${username}";
 	  uid = 1000;
