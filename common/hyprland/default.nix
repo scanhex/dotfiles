@@ -8,9 +8,43 @@
       enable = true;
       extraConfig = lib.readFile ./hyprland.conf;
     };
+    programs.hyprlock.enable = true;
+    hm.programs.hyprlock = {
+      enable = true;
+      settings = {
+          general = {
+            disable_loading_bar = true;
+            grace = 0;
+            hide_cursor = true;
+            no_fade_in = false;
+          };
+
+          background = [
+            {
+              path = toString ./outer-wilds.png;
+            }
+          ];
+
+          input-field = [
+            {
+              size = "200, 50";
+              position = "0, -80";
+              monitor = "";
+              dots_center = true;
+              fade_on_empty = false;
+              font_color = "rgb(202, 211, 245)";
+              inner_color = "rgb(91, 96, 120)";
+              outer_color = "rgb(24, 25, 38)";
+              outline_thickness = 5;
+              placeholder_text = "<span foreground=\"##cad3f5\">Password...</span>";
+              shadow_passes = 2;
+            }
+          ];
+        };
+    };
     services.playerctld.enable = true;
     hm.programs.tofi.enable = true;
-    hm.home.packages = [ pkgs.blueman pkgs.xorg.xrdb ];
+    hm.home.packages = [ pkgs.blueman pkgs.xorg.xrdb pkgs.hyprshot ];
     my.waybar.enable = true;
     my.stylix.enable = true;
     hm.xresources.properties = {

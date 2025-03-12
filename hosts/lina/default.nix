@@ -11,7 +11,7 @@
       enable = true;
       displayManager.gdm.enable = true;
       displayManager.startx.enable = true;
-      desktopManager.xfce.enable = true;
+#      desktopManager.xfce.enable = true;
       desktopManager.xterm.enable = true;
 #      desktopManager.cinnamon.enable = true;
       desktopManager.gnome.enable = true;
