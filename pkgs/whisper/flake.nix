@@ -41,7 +41,7 @@
             mv $out/bin/whisper-dictation $out/bin/.whisper-dictation-unwrapped
             cat > $out/bin/whisper-dictation << EOF
             #!/bin/sh
-            export PATH="${pkgs.wtype}/bin:\$PATH"
+            export PATH="${pkgs.lib.optionalString (system == "x86_64-linux" || system == "aarch64-linux") "${pkgs.wtype}/bin:"}$PATH"
             exec $out/bin/.whisper-dictation-unwrapped "\$@"
             EOF
             chmod +x $out/bin/whisper-dictation
@@ -49,7 +49,7 @@
         };
         
         devShells.default = pkgs.mkShell {
-          buildInputs = [ pythonEnv pkgs.wtype ];
+          buildInputs = [ pythonEnv ];
         };
       }
     );
