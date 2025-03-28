@@ -4,64 +4,10 @@
   imports = [ ./waybar.nix ./stylix.nix ];
   config = lib.mkIf config.my.hyprland.enable {
     programs.hyprland.enable = true; # needed?
-    hm.wayland.windowManager.hyprland = {
-      enable = true;
-      extraConfig = lib.readFile ./hyprland.conf;
-    };
     programs.hyprlock.enable = true;
-    hm.programs.hyprlock = {
-      enable = true;
-      settings = {
-          general = {
-            disable_loading_bar = true;
-            grace = 0;
-            hide_cursor = true;
-            no_fade_in = false;
-          };
-
-          background = [
-            {
-              path = toString ./outer-wilds.png;
-            }
-          ];
-
-          input-field = [
-            {
-              size = "200, 50";
-              position = "0, -80";
-              monitor = "";
-              dots_center = true;
-              fade_on_empty = false;
-              font_color = "rgb(202, 211, 245)";
-              inner_color = "rgb(91, 96, 120)";
-              outer_color = "rgb(24, 25, 38)";
-              outline_thickness = 5;
-              placeholder_text = "<span foreground=\"##cad3f5\">Password...</span>";
-              shadow_passes = 2;
-            }
-          ];
-        };
-    };
     services.playerctld.enable = true;
-    hm.programs.tofi.enable = true;
-    hm.home.packages = [ pkgs.blueman pkgs.xorg.xrdb pkgs.hyprshot ];
     my.waybar.enable = true;
     my.stylix.enable = true;
-    hm.xresources.properties = {
-      "Xft.dpi" = 155;
-      "Xft.autohint" = 0;
-      "Xft.lcdfilter" = "lcddefault";
-      "Xft.hintstyle" = "hintfull";
-      "Xft.hinting" = 1;
-      "Xft.antialias" = 1;
-      "Xft.rgba" = "rgb";
-    };
-    hm.home.pointerCursor = {
-      name = "Bibata-Modern-Ice";
-      package = pkgs.bibata-cursors;
-      size = 24;
-      gtk.enable = true;
-      x11.enable = true; # Important for X applications
-    };
+    hm.my.hyprland.enable = true;
   };
 }

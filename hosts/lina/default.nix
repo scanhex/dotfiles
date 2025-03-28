@@ -120,6 +120,7 @@
   hm.my.wezterm.enable = true;
   hm.my.ghostty.enable = true;
   hm.my.zed.enable = true;
+  hm.my.obs.enable = true;
   my.lutris.enable = true;
   my.work.enable = true;
 
