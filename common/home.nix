@@ -8,6 +8,7 @@ in
 
   home.packages = [
     pkgs.bash
+    pkgs.dnsutils
       pkgs.tmux 
       pkgs.clang
       pkgs.rustc
@@ -22,7 +23,6 @@ in
       pkgs.valgrind
       pkgs.nushell
       pkgs.bat
-      pkgs.stgit
       pkgs.tig
       pkgs.virtualenv
       pkgs.pixi

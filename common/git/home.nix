@@ -2,6 +2,7 @@
 {
   programs.git = {
     enable = true;
+    lfs.enable = true;
     userName = config.my.name;
     userEmail = config.my.email;
     ignores = [ "/personal/" ];

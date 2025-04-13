@@ -48,6 +48,7 @@
     };
     programs.tofi.enable = true;
     home.packages = [ pkgs.blueman pkgs.xorg.xrdb pkgs.hyprshot ];
+    services.dunst.enable = true;
     xresources.properties = {
       "Xft.dpi" = 155;
       "Xft.autohint" = 0;
