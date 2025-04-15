@@ -1,7 +1,7 @@
 {lib, pkgs, config, ...}:
 {
   options.my.hyprland.enable = lib.mkEnableOption "hyprland";
-  imports = [ ./waybar.nix ./stylix.nix ./bluetooth.nix ];
+  imports = [ ./waybar.nix ./stylix.nix ];
   config = lib.mkIf config.my.hyprland.enable {
     programs.hyprland.enable = true; # needed?
     programs.hyprlock.enable = true;

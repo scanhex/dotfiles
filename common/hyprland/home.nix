@@ -7,6 +7,8 @@
     description = "Extra configuration for hyprland";
   };
 
+  imports = [ ./bluetooth.nix ];
+
   config = lib.mkIf config.my.hyprland.enable {
     wayland.windowManager.hyprland = {
       enable = true;
