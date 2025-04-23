@@ -2,25 +2,22 @@
 { pkgs, lib, config, ... }:
 let nix-user-chroot-patch = pkgs.callPackage ../nix-user-chroot-patch {};
 pythonEnv = pkgs.python312.withPackages (ps: [ ps.numpy ps.pandas ps.matplotlib ps.requests ps.pip ]);
-in 
+in
 {
   imports = lib.my.getHmModules [ ./. ];
 
   home.packages = [
-    pkgs.bash
-    pkgs.dnsutils
-      pkgs.tmux 
+      pkgs.bashInteractive
+      pkgs.dnsutils
+      pkgs.tmux
       pkgs.clang
       pkgs.rustc
       pkgs.nix
       pkgs.cargo
-      pkgs.glibc
       pkgs.gnumake
       pkgs.cmake
       pkgs.ninja
       pkgs.clang-tools_17
-      pkgs.gdb
-      pkgs.valgrind
       pkgs.nushell
       pkgs.bat
       pkgs.tig
@@ -37,7 +34,7 @@ in
       pkgs.yazi
       pythonEnv
       nix-user-chroot-patch
-  ];
+  ] ++ lib.optionals pkgs.stdenv.isLinux [ pkgs.glibc pkgs.gdb pkgs.valgrind ];
 
   programs.fzf.enable = true;
   programs.lazygit = {
@@ -57,6 +54,7 @@ in
           aliases = {
             bo = ["bookmark"];
           };
+          git.subprocess = true;
           merge-tools.difft.diff-args = ["--color=always" "$left" "$right" ];
           ui.diff.tool = "difft";
           ui.default-command = ["log" "-r" "present(@) | ancestors(immutable_heads().., 2) | present(trunk())"];
@@ -74,7 +72,7 @@ in
   };
   my.zellij.enable = true;
   xdg.enable = true;
-  nix = { 
+  nix = {
     enable = true;
     settings = {
       trusted-users = [ config.my.user ];

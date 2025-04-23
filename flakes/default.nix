@@ -4,5 +4,6 @@
         ./nixos.nix
         ./home-manager.nix
         ./overlays.nix
+        ./darwin.nix
     ];
 }

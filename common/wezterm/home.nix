@@ -31,7 +31,8 @@ return {
   font_size = 14.0,
   leader = { key="b", mods="CTRL" },
   hide_tab_bar_if_only_one_tab = true,
-  window_decorations = "NONE",
+  -- window_decorations = "NONE",
+  default_prog = { "${pkgs.bashInteractive}/bin/bash" },
   keys = {
     {key="n", mods="SHIFT|CTRL", action="ToggleFullScreen"},
     { key = "b", mods = "LEADER|CTRL",       action=wezterm.action.SendKey { key = 'b', mods = 'CTRL' }},

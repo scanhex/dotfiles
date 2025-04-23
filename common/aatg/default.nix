@@ -5,17 +5,18 @@
   ...
 }:
 with lib; let
-  cfg = config.my.aatg;
+cfg = config.my.aatg;
 in {
-# Genshin Impact Launcher
+  # Genshin Impact Launcher
   options.my.aatg = {
-      installLibs = mkOption { type = types.bool; default = false; };
-      blockMihoyoTelemetry = mkOption { type = types.bool; default = false; };
+    installLibs = mkOption { type = types.bool; default = false; };
+    blockMihoyoTelemetry = mkOption { type = types.bool; default = false; };
   };
 
   config.my.lutris.extraLibraries = mkIf cfg.installLibs [ pkgs.libadwaita pkgs.gtk4 ];
 
-  config.networking.hosts = mkIf cfg.blockMihoyoTelemetry {
+  config.networking = optionalAttrs cfg.blockMihoyoTelemetry {
+    hosts = {
       "0.0.0.0" = [
         "overseauspider.yuanshen.com"
         "log-upload-os.hoyoverse.com"
@@ -35,4 +36,5 @@ in {
         "remote-config-proxy-prd.uca.cloud.unity3d.com"
       ];
     };
+  };
 }

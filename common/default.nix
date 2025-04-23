@@ -16,8 +16,6 @@
 
   hm.imports = [ ./home.nix ];
 
-  services.earlyoom.enable = true;
-
   home-manager.extraSpecialArgs = {
     inherit inputs;
   };

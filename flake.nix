@@ -17,6 +17,10 @@
             url = "github:nix-community/NixOS-WSL";
             inputs.nixpkgs.follows = "nixpkgs";
         };
+        darwin = {
+          url = "github:lnl7/nix-darwin/nix-darwin-24.11";
+          inputs.nixpkgs.follows = "nixpkgs";
+        };
         home-manager = {
             url = "github:nix-community/home-manager/release-24.11";
             inputs.nixpkgs.follows = "nixpkgs";
@@ -32,7 +36,7 @@
 		flake-parts.lib.mkFlake { inherit inputs; } {
 			systems = [
 				"x86_64-linux"
-				"aarch64-linux"
+				"aarch64-darwin"
 			];
 
 			imports = [
