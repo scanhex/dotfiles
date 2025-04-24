@@ -13,19 +13,30 @@
         
         pythonEnv = pkgs.python3.withPackages (ps: with ps; [
           pyaudio
-          pynput
           requests
           numpy
           pyperclip
           pyxdg
           xlib
           evdev
-        ]);
+        ] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.system != "aarch64-darwin" && pkgs.stdenv.hostPlatform.system != "x86_64-darwin") ps.pynput);
+
+        rustApp = pkgs.rustPlatform.buildRustPackage {
+          pname = "whisper-dictation";
+          version = "0.1.0";
+          src = ./.;
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+          };
+          buildInputs = [ pkgs.iconv ];
+        };
         
       in
       {
-        packages.default = pkgs.stdenv.mkDerivation {
-          pname = "whisper-dictation";
+        packages.default = rustApp;
+
+        packages.python = pkgs.stdenv.mkDerivation {
+          pname = "whisper-dictation-python";
           version = "0.1.0";
           
           src = ./.;
@@ -54,3 +65,4 @@
       }
     );
 }
+
