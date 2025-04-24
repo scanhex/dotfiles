@@ -8,6 +8,11 @@
 {
   networking.hostName = "mbp";
 
+  hm.my.bash.bashrcSuffix = "
+    export PATH=\"$HOME/.bun/bin:$HOME/.cache/.bun/bin:$PATH\"
+    ";
+
+
   hm.my.wezterm.enable = true;
   hm.my.zed.enable = true;
   hm.home.packages = [ pkgs.slack ];
