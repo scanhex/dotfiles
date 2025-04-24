@@ -44,6 +44,13 @@ in
     amorozov = mkHome { 
       modules = [./home-manager-work.nix];
     };
+    alex = mkHome { 
+	    modules = [
+	    {
+		    home.username = "alex";
+		    home.homeDirectory = "/home/alex";
+	    }];
+    };
   };
 
   perSystem = { self', inputs', pkgs, ... }: {

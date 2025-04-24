@@ -7,7 +7,9 @@ fi
 if [ -f ~/.profile ]; then
     . ~/.profile
 fi
-. ${config.home.profileDirectory}/etc/profile.d/nix.sh
+if [ -f ${config.home.profileDirectory}/etc/profile.d/nix.sh ]; then
+    . ${config.home.profileDirectory}/etc/profile.d/nix.sh
+fi
 source ${./git-prompt.sh}
 PS1='[\w$(__git_ps1 " (%s)")]\$ '
 HISTSIZE=10000000
@@ -31,9 +33,11 @@ zellij_tab_name_update() {
     fi
 }
 
-for completion_script in ${config.home.profileDirectory}/share/bash-completion/completions/*
-do
-  source "$completion_script"
-done
+if [ -d "${config.home.profileDirectory}/share/bash-completion/completions" ]; then
+  for completion_script in ${config.home.profileDirectory}/share/bash-completion/completions/*
+  do
+    source "$completion_script"
+  done
+fi
     '';
 }
