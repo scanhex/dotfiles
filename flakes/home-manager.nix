@@ -42,14 +42,22 @@ in
 {
   flake.homeConfigurations = {
     amorozov = mkHome { 
-      modules = [./home-manager-work.nix];
+      modules = [
+      {
+        home.username = "amorozov";
+        home.homeDirectory = "/home/amorozov";
+      }
+      ./home-manager-work.nix
+      ];
     };
     alex = mkHome { 
 	    modules = [
 	    {
 		    home.username = "alex";
 		    home.homeDirectory = "/home/alex";
-	    }];
+	    }
+      ./home-manager-work.nix
+      ];
     };
   };
 

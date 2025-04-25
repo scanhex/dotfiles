@@ -1,14 +1,10 @@
+{pkgs, ...}:
 {
-    home.username = "amorozov";
-    home.homeDirectory = "/home/amorozov";
     home.shellAliases = {
-        g = "git";
     };
+    home.packages = [ pkgs.micromamba ];
     my.bash.bashrcPrefix = ''
-    echo hi
 '';
     my.bash.bashrcSuffix = ''
-    echo bye
 '';
-
 }
