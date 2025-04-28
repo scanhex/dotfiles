@@ -8,7 +8,7 @@
 {
   users.users.${config.my.user} = {
     home = "/Users/${config.my.user}";
-    shell = pkgs.bash;
+    shell = pkgs.bashInteractive;
   };
   environment.variables = {
     LANG = "en_US.UTF-8";

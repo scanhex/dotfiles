@@ -14,6 +14,7 @@
 
 
   hm.my.wezterm.enable = true;
+  hm.my.wezterm.tmux-binds = false;
   hm.my.zed.enable = true;
   hm.home.packages = [ pkgs.slack ];
 

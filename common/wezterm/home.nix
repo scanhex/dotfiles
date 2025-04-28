@@ -7,6 +7,11 @@
 {
     options.my.wezterm = {
         enable = lib.mkEnableOption "wezterm";
+        tmux-binds = lib.mkOption {
+          description = "Enable tmux bindings for wezterm";
+          type = lib.types.bool;
+          default = true;
+        };
     };
 
     config = lib.mkIf config.my.wezterm.enable {
@@ -29,12 +34,13 @@ end)
 return {
   font = wezterm.font("Iosevka Nerd Font Mono"),
   font_size = 14.0,
-  leader = { key="b", mods="CTRL" },
+  ${if config.my.wezterm.tmux-binds then "leader = { key=\"b\", mods=\"CTRL\" }," else ""}
   hide_tab_bar_if_only_one_tab = true,
   -- window_decorations = "NONE",
   default_prog = { "${pkgs.bashInteractive}/bin/bash" },
   keys = {
     {key="n", mods="SHIFT|CTRL", action="ToggleFullScreen"},
+    ${if config.my.wezterm.tmux-binds then ''
     { key = "b", mods = "LEADER|CTRL",       action=wezterm.action.SendKey { key = 'b', mods = 'CTRL' }},
     { key = "p", mods = "LEADER",       action=wezterm.action.ActivateTabRelative(-1)},
     { key = "n", mods = "LEADER",       action=wezterm.action.ActivateTabRelative(1)},
@@ -54,6 +60,7 @@ return {
     { key = "j", mods = "LEADER",       action=wezterm.action{ActivatePaneDirection="Down"}},
     { key = "k", mods = "LEADER",       action=wezterm.action{ActivatePaneDirection="Up"}},
     { key = "l", mods = "LEADER",       action=wezterm.action{ActivatePaneDirection="Right"}},
+    '' else ""}
   }
 }
 '';
