@@ -1,28 +1,74 @@
 [package]
-name = "whisper"
+name = "rust_whisper_dictation"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1"
-arboard = "3"
+# Core Async Runtime
+tokio = { version = "1", features = ["full"] }
+tokio-util = "0.7"
+
+# Argument Parsing
+clap = { version = "4", features = ["derive", "env"] }
+
+# Audio Input/Output
 cpal = "0.15"
-clap = { version = "4", features = ["derive"] }
-crossbeam-channel = "0.5"
-base64 = "0.22.1"
-enigo = "0.1"
-evdev = "0.12"
-hound = "3"
-once_cell = "1"
+chrono = "0.4"
+hound = "3.5" # WAV file handling
+
+# Hotkey Listening (Cross-platform except Wayland needs manual)
 rdev = "0.5"
-reqwest = { version = "0.12", features = ["json", "blocking"] }
+
+# Wayland Input Event Handling (Linux Only)
+# This crate provides raw input event access
+input-linux = { version = "0.6", optional = true }
+input-linux-sys = { version = "0.8", optional = true } # Needed for specific types/constants
+libc = { version = "0.2", optional = true } # For polling/file descriptors on Linux
+
+# Keyboard/Mouse Simulation
+enigo = "0.2"
+
+# HTTP Client
+reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
+
+# JSON Handling
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-thiserror = "1"
-tempfile = "3"
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
-urlencoding = "2"
 
-[[bin]]
+# Clipboard
+arboard = "3"
+
+# Base64 Encoding
+base64 = "0.22"
+
+# Filesystem & Paths
+tempfile = "3"
+directories = "5" 
+
+# Signal Handling
+ctrlc = { version = "3", features = ["termination"] }
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# Error Handling convenience
+anyhow = "1" # Or use thiserror for library-style errors
+
+# Platform-specific helpers (only if needed for finding tools)
+which = { version = "6", optional = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# Activate these deps only for Linux builds
+input-linux = { version = "0.6" }
+input-linux-sys = { version = "0.8" }
+libc = "0.2"
+which = "6"
+
+[features]
+# Feature to explicitly enable Wayland support build
+wayland = ["input-linux", "input-linux-sys", "libc", "which"]
+
+[[bin]] 
 name = "whisper"
 path = "main.rs"

@@ -6,7 +6,10 @@
 }:
 
 {
-  users.users.${config.my.user}.home = "/Users/${config.my.user}";
+  users.users.${config.my.user} = {
+    home = "/Users/${config.my.user}";
+    shell = pkgs.bash;
+  };
   environment.variables = {
     LANG = "en_US.UTF-8";
     LC_ALL = "en_US.UTF-8";

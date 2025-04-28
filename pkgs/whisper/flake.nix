@@ -4,9 +4,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     flake-utils.url = "github:numtide/flake-utils";
+    crane.url = "github:ipetkov/crane";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, crane }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -21,16 +22,20 @@
           evdev
         ] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.system != "aarch64-darwin" && pkgs.stdenv.hostPlatform.system != "x86_64-darwin") ps.pynput);
 
-        rustApp = pkgs.rustPlatform.buildRustPackage {
-          pname = "whisper-dictation";
-          version = "0.1.0";
-          src = ./.;
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-          };
-          buildInputs = [ pkgs.iconv ];
+        craneLib = crane.mkLib pkgs;
+
+        commonArgs = {
+          src = self;
+          nativeBuildInputs = [ pkgs.iconv ]; # any extra native libs you need
         };
-        
+
+        deps = craneLib.buildDepsOnly commonArgs;
+
+        rustApp = craneLib.buildPackage (commonArgs // {
+          inherit deps;
+          pname = "whisper";
+          version = "0.1.0";
+        });
       in
       {
         packages.default = rustApp;
