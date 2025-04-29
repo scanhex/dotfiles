@@ -5,12 +5,12 @@ use std::path::PathBuf;
 #[command(author, version, about = "Whisper Dictation (Rust) - Dictate and paste via APIs")]
 pub struct Config {
     /// API key/token for the selected service. Can also be set via environment variables:
-    /// ELEVENLABS_API_KEY or REPLICATE_API_TOKEN
+    /// OPENAI_API_KEY, ELEVENLABS_API_KEY, or REPLICATE_API_TOKEN
     #[arg(short, long, env = "API_KEY_PLACEHOLDER", hide_env_values = true)] // Placeholder, specific env handled dynamically
     pub api_key_arg: Option<String>,
 
     /// Speech-to-text service to use
-    #[arg(short, long, value_enum, default_value_t = Service::ElevenLabs, env = "DICTATION_SERVICE")]
+    #[arg(short, long, value_enum, default_value_t = Service::default(), env = "DICTATION_SERVICE")]
     pub service: Service,
 
     /// Output mode
@@ -42,8 +42,11 @@ pub struct Config {
     pub api_key: String,
 }
 
-#[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Service {
+    #[serde(rename = "openai")]
+    OpenAI,
+    #[serde(rename = "replicate")]
     Replicate,
     ElevenLabs,
 }
@@ -53,7 +56,14 @@ impl Service {
         match self {
             Service::Replicate => "REPLICATE_API_TOKEN",
             Service::ElevenLabs => "ELEVENLABS_API_KEY",
+            Service::OpenAI => "OPENAI_API_KEY",
         }
+    }
+}
+
+impl Default for Service {
+    fn default() -> Self {
+        Service::OpenAI // Default to OpenAI
     }
 }
 

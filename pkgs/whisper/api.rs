@@ -22,6 +22,10 @@ const REPLICATE_POLL_TIMEOUT: Duration = Duration::from_secs(120);
 const ELEVENLABS_API_URL: &str = "https://api.elevenlabs.io/v1/speech-to-text";
 const ELEVENLABS_MODEL: &str = "scribe_v1"; // Or allow configuration
 
+// OpenAI constants
+const OPENAI_API_URL: &str = "https://api.openai.com/v1/audio/transcriptions";
+const OPENAI_MODEL: &str = "gpt-4o-transcribe"; 
+
 // --- Replicate ---
 
 #[derive(Serialize)]
@@ -344,6 +348,104 @@ pub async fn transcribe_elevenlabs(config: &Config, audio_path: &Path) -> Result
 
     Err(anyhow!(
         "ElevenLabs API call failed after {} retries.",
+        config.retries
+    ))
+}
+
+// --- OpenAI ---
+
+#[derive(Deserialize, Debug)]
+struct OpenAIResponse {
+    text: String,
+}
+
+pub async fn transcribe_openai(config: &Config, audio_path: &Path) -> Result<String> {
+    let client = Client::new();
+    let api_key = &config.api_key;
+
+    if api_key.is_empty() {
+        return Err(anyhow!(
+            "OpenAI API key is missing. Please provide it via --api-key or OPENAI_API_KEY env var."
+        ));
+    }
+
+    for attempt in 0..=config.retries {
+        if attempt > 0 {
+            let delay = Duration::from_secs(2u64.pow(attempt - 1));
+            info!(
+                "Retrying OpenAI API call (attempt {}) after {:?}" ,
+                attempt + 1,
+                delay
+            );
+            sleep(delay).await;
+        }
+
+        // Re-open file and prepare form data inside the loop for retries
+        let file = File::open(audio_path)
+            .await
+            .context("Failed to open audio file for OpenAI upload")?;
+        let stream = FramedRead::new(file, BytesCodec::new());
+        let file_body = Body::wrap_stream(stream);
+
+        let audio_part = multipart::Part::stream(file_body)
+            .file_name(
+                audio_path
+                    .file_name()
+                    .map_or("audio.wav".into(), |n| n.to_string_lossy().into_owned()),
+            )
+            .mime_str("audio/wav")?; // OpenAI supports various formats, wav is safe
+
+        let form = multipart::Form::new()
+            .text("model", OPENAI_MODEL.to_string())
+            .text("prompt", "The following recording is made by a technical user who knows computer science and software engineering well.")
+            .part("file", audio_part);
+
+        let response = client
+            .post(OPENAI_API_URL)
+            .bearer_auth(api_key)
+            .multipart(form)
+            .timeout(Duration::from_secs(60)) // Increased timeout for potential processing
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                let status = resp.status();
+                debug!("OpenAI API Status Code: {}", status);
+                if status.is_success() {
+                    let result = resp.json::<OpenAIResponse>().await.context("Failed to parse OpenAI JSON response")?;
+                    info!("OpenAI transcription successful.");
+                    return Ok(result.text.trim().to_string());
+                } else if status == StatusCode::TOO_MANY_REQUESTS || status.is_server_error() {
+                    warn!("OpenAI API failed ({}), retrying...", status);
+                    continue; // Retry
+                } else {
+                    let error_text = resp
+                        .text()
+                        .await
+                        .unwrap_or_else(|_| "Failed to read error body".into());
+                    return Err(anyhow!(
+                        "OpenAI API call failed ({}): {}",
+                        status,
+                        error_text
+                    ));
+                }
+            }
+            Err(e) => {
+                // Retry on timeout or connection errors
+                if (e.is_timeout() || e.is_connect()) && attempt < config.retries {
+                    warn!("OpenAI request error ({}), retrying...", e);
+                    continue; // Retry
+                } else {
+                    // For other errors or if retries exhausted, return the error
+                    return Err(anyhow!("OpenAI API request failed: {}", e).context(e));
+                }
+            }
+        }
+    } // End retry loop
+
+    Err(anyhow!(
+        "OpenAI API call failed after {} retries.",
         config.retries
     ))
 }

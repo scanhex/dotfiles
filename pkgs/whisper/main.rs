@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::exit;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, Mutex}; // Use tokio's async Mutex
 
 mod api;
@@ -44,9 +44,10 @@ async fn main() -> Result<()> {
             config.service.get_env_var_name()
         );
     }
-    if config.service == Service::Replicate && config.api_key.starts_with("sk-") {
-        // Basic check, Replicate uses tokens, ElevenLabs uses sk-...
+    if config.service == Service::Replicate && config.api_key.starts_with("sk") {
         warn!("API key looks like an ElevenLabs key, but Replicate service is selected.");
+    } else if config.service == Service::OpenAI && !config.api_key.starts_with("sk-") {
+        warn!("API key does not look like an OpenAI key (should start with 'sk-'), but OpenAI service is selected.");
     }
     // Add more validation as needed
 
@@ -95,7 +96,6 @@ async fn main() -> Result<()> {
         "Whisper Dictation Ready. Press hotkey ({}:{}) to toggle.",
         config.modifier, config.key
     );
-    info!("Press Enter in the *original* terminal (if no hotkey active) as fallback.");
     info!("Press Ctrl+C to quit.");
 
     // Fallback stdin listener (simple version) - Runs in background
@@ -205,6 +205,7 @@ async fn process_recorded_audio(config: Arc<Config>, cache_dir: PathBuf, audio_d
             info!("Audio saved successfully.");
             // 2. Transcribe using API
             let transcription_result = match config.service {
+                Service::OpenAI => api::transcribe_openai(&config, &wav_path).await,
                 Service::Replicate => api::transcribe_replicate(&config, &wav_path).await,
                 Service::ElevenLabs => {
                     api::transcribe_elevenlabs(&config, &wav_path.as_path()).await
