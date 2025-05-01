@@ -4,12 +4,23 @@ return {
   lazy = false,
   version = false, -- set this to "*" if you want to always pull the latest change, false to update on release
   opts = {
-    provider = "claude",
+    provider = "gemini",
     claude = {
       endpoint = "https://api.anthropic.com",
       model = "claude-3-7-sonnet-20250219",
       temperature = 0,
       max_tokens = 4096
+    },
+    openai = {
+      endpoint = "https://api.openai.com/v1",
+      model = "gpt-4.1",
+      temperature = 0,
+      max_completion_tokens = 8192
+    },
+    gemini = {
+      model = "gemini-2.5-pro-exp-03-25";
+      max_tokens = 32000;
+      temperature = 0;
     }
   },
   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`

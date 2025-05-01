@@ -1,13 +1,22 @@
-{lib, ... }:
+{lib, config, ... }:
 {
-  programs.zellij = {
+  options = {
+    my.zellij.enable = lib.mkEnableOption "zellij";
+    my.zellij.ctrl-prefix = lib.mkOption {
+      description = "Key that enables tmux mode when pressed with ctrl";
+      type = lib.types.str;
+      default = "b";
+    };
+  };
+
+  config.programs.zellij = lib.mkIf config.my.zellij.enable {
     enable = true;
     settings = {
       theme = "dracula";
       keybinds = {
         "normal clear-defaults=true" = {
           "bind \"F12\"".SwitchToMode = "locked";
-          "bind \"Ctrl b\"".SwitchToMode = "tmux";
+          "bind \"Ctrl ${config.my.zellij.ctrl-prefix}\"".SwitchToMode = "tmux";
         };
         locked = {
           "bind \"F12\"".SwitchToMode = "Normal";
@@ -18,7 +27,7 @@
           "bind \"q\"".SwitchToMode = "Normal";
           "bind \"G\"".ScrollToBottom = { _args = [ ]; };
           "bind \"g\"".ScrollToTop = { _args = [ ]; };
-          "bind \"Ctrl b\"".SwitchToMode = "tmux";
+          "bind \"Ctrl ${config.my.zellij.ctrl-prefix}\"".SwitchToMode = "tmux";
         };
         tmux = builtins.foldl' (acc: n:
             acc // {

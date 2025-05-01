@@ -72,6 +72,7 @@ in
       jjp = "jj fix && jj git push";
       jjf = "jj git fetch";
   };
+  my.zellij.enable = true;
   xdg.enable = true;
   nix = { 
     enable = true;
