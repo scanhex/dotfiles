@@ -17,7 +17,7 @@ in
       pkgs.gnumake
       pkgs.cmake
       pkgs.ninja
-      pkgs.clang-tools_17
+      pkgs.clang-tools_19
       pkgs.nushell
       pkgs.bat
       pkgs.tig
