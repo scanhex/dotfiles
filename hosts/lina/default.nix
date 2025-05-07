@@ -115,7 +115,7 @@
 #jack.enable = true;
   };
 
-  time.timeZone = "America/New_York";
+  time.timeZone = "America/Chicago";
 
   hm.my.wezterm.enable = true;
   hm.my.ghostty.enable = true;
