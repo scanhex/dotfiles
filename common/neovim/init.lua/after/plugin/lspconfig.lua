@@ -33,6 +33,9 @@ return {
             require('lspconfig').nil_ls.setup {
                 capabilities = capabilities
             }
+            require('lspconfig').kotlin_language_server.setup {
+                capabilities = capabilities
+            }
             --            require('lspconfig').rust_analyzer.setup {
             --               capabilities = capabilities
             --          }
