@@ -15,6 +15,7 @@ in
 
     config = mkIf cfg.enable { 
         programs.zed-editor = { 
+            package = pkgs.unstable.zed-editor;
             enable = true;
             userSettings = {
               features = {

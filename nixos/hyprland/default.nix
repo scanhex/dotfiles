@@ -4,7 +4,7 @@
   imports = [ ./waybar.nix ];
   config = lib.mkIf config.my.hyprland.enable {
     my.waybar.enable = true;
-    my.stylix.enable = true;
+    #my.stylix.enable = true;
     hm.my.hyprland.enable = true;
     programs = lib.optionalAttrs config.my.hyprland.enable {
       hyprland.enable = true; # needed?
