@@ -51,6 +51,7 @@ in
 	programs.neovim = {
 		enable = true;
         defaultEditor = true;
+        #package = pkgs.unstable.neovim;
         package = inputs.neovim-nightly-overlay.packages.${pkgs.system}.default;
 		extraPackages = with pkgs; [
 			ripgrep

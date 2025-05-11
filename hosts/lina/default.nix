@@ -54,6 +54,8 @@
       enable = true;
       wifi.powersave = false; # needed on Lina, can maybe disable for laptops
   };
+  networking.firewall.interfaces.enp7s0.allowedTCPPorts = [ 23923 ];
+  networking.firewall.interfaces.wlp8s0.allowedTCPPorts = [ 23923 ];
 
   users.users.${username} = {
 	  isNormalUser = true;
@@ -65,9 +67,10 @@
 	  packages = with pkgs; [
 		  google-chrome
 		  firefox
-          unstable.discord-canary
-          telegram-desktop
-          zotero
+      discord-canary
+      telegram-desktop
+      zotero
+      obsidian
 	  ];
   };
   services.udev.extraRules = ''
