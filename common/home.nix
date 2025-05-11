@@ -12,6 +12,7 @@ in
       pkgs.tmux
       pkgs.clang
       pkgs.rustc
+      pkgs.rustfmt
       pkgs.nix
       pkgs.cargo
       pkgs.gnumake
