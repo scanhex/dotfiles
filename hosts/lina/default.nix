@@ -71,6 +71,8 @@
       telegram-desktop
       zotero
       obsidian
+      jetbrains.idea-community-bin
+      kotlin-language-server
 	  ];
   };
   services.udev.extraRules = ''
