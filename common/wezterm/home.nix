@@ -16,7 +16,7 @@
 
     config = lib.mkIf config.my.wezterm.enable {
         home.packages = with pkgs; [
-            (nerdfonts.override { fonts = [ "Iosevka" ]; })
+            nerd-fonts.iosevka
         ];
         programs.wezterm = {
             enable = true;

@@ -32,8 +32,8 @@
       };
       fonts = {
         monospace = {
-          package = pkgs.nerdfonts.override {fonts = ["JetBrainsMono"];};
-          name = "JetBrains Mono";
+          package = pkgs.nerd-font.iosevka;
+          name = "Iosevka";
         };
         sansSerif = {
           package = pkgs.montserrat;

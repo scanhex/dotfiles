@@ -11,7 +11,7 @@
 
     config = lib.mkIf config.my.ghostty.enable {
         home.packages = with pkgs; [
-            (nerdfonts.override { fonts = [ "Iosevka" ]; })
+            nerd-fonts.iosevka
         ];
         programs.ghostty = {
             enable = true;
