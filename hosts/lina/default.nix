@@ -122,6 +122,26 @@
 
   time.timeZone = "America/Chicago";
 
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    config.common.default = "gtk";
+  };
+
+  hm.services.darkman = {
+    enable = true;
+    settings.lat = 41.9; 
+    settings.lon = -87.6;
+    darkModeScripts.gtk-theme = ''
+      ${pkgs.dconf}/bin/dconf write \
+      /org/gnome/desktop/interface/color-scheme "'prefer-dark'"
+      '';
+    lightModeScripts.gtk-theme = ''
+      ${pkgs.dconf}/bin/dconf write \
+      /org/gnome/desktop/interface/color-scheme "'prefer-light'"
+      '';
+    settings.usegeoclue=true;
+  };
   hm.my.wezterm.enable = true;
   hm.my.ghostty.enable = true;
   hm.my.zed.enable = true;
