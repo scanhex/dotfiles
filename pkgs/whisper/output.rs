@@ -111,7 +111,6 @@ fn type_text_char_by_char(text: &str) -> Result<()> {
             Err(e.into())
         }
     }
-
  }
 
 // --- Paste Simulation ---
