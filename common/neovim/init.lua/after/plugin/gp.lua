@@ -10,18 +10,26 @@ return {
       agents = {
         {
           provider = "anthropic",
-          name = "ChatClaude-3-7-Sonnet",
+          name = "ChatClaude-4-Sonnet",
           chat = true,
           command = false,
-          model = { model = "claude-3-7-sonnet-latest", temperature = 0.8, top_p = 1 },
+          model = { model = "claude-sonnet-4-20250514", temperature = 0.8, top_p = 1 },
           system_prompt = require("gp.defaults").chat_system_prompt,
         },
         {
           provider = "anthropic",
-          name = "CodeClaude-3-7-Sonnet",
+          name = "ChatClaude-4-Opus",
+          chat = true,
+          command = false,
+          model = { model = "claude-opus-4-20250514", temperature = 0.8, top_p = 1 },
+          system_prompt = require("gp.defaults").chat_system_prompt,
+        },
+        {
+          provider = "anthropic",
+          name = "CodeClaude-4-Sonnet",
           chat = false,
           command = true,
-          model = { model = "claude-3-7-sonnet-latest", temperature = 0.8, top_p = 1 },
+          model = { model = "claude-sonnet-4-20250514", temperature = 0.8, top_p = 1 },
           system_prompt = require("gp.defaults").code_system_prompt,
         }
       }
