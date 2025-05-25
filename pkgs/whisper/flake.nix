@@ -26,15 +26,26 @@
 
         commonArgs = {
           src = self;
-          nativeBuildInputs = [ pkgs.iconv ]; # any extra native libs you need
+          nativeBuildInputs = [ pkgs.iconv ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.pkg-config pkgs.makeWrapper ];
+          buildInputs = pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.openssl pkgs.alsa-lib pkgs.udev pkgs.xorg.libX11 pkgs.xorg.libXi pkgs.xorg.libXtst pkgs.xdotool pkgs.wtype ];
         };
 
-        deps = craneLib.buildDepsOnly commonArgs;
+        deps = craneLib.buildDepsOnly (commonArgs // {
+          cargoExtraArgs = pkgs.lib.optionalString pkgs.stdenv.isLinux "--features wayland";
+        });
 
         rustApp = craneLib.buildPackage (commonArgs // {
           inherit deps;
           pname = "whisper";
           version = "0.1.0";
+          cargoExtraArgs = pkgs.lib.optionalString pkgs.stdenv.isLinux "--features wayland";
+          postInstall = ''
+            if [ "${pkgs.stdenv.hostPlatform.system}" = "x86_64-linux" ] || \
+                [ "${pkgs.stdenv.hostPlatform.system}" = "aarch64-linux" ]; then
+              wrapProgram $out/bin/whisper \
+              --prefix PATH : ${pkgs.wtype}/bin
+            fi
+          '';
         });
       in
       {
@@ -65,7 +76,7 @@
         };
         
         devShells.default = pkgs.mkShell {
-          buildInputs = [ pythonEnv ];
+          buildInputs = [ pythonEnv ] ++ commonArgs.nativeBuildInputs ++ commonArgs.buildInputs;
         };
       }
     );

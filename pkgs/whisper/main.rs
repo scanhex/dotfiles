@@ -1,11 +1,10 @@
 use anyhow::{Context, Result};
-use clap::Parser;
 use log::{debug, error, info, warn};
 use std::path::PathBuf;
 use std::process::exit;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::sync::{mpsc, Mutex}; // Use tokio's async Mutex
 
 mod api;

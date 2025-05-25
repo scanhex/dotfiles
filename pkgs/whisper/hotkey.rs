@@ -1,14 +1,14 @@
 use crate::config::Config;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Result};
 use log::{debug, error, info, warn};
-use rdev::{listen, Event, EventType, Key, KeyboardState, ListenError};
-use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
-use std::sync::mpsc::Sender as StdSender; // Use std mpsc for sync listener thread
+use rdev::{listen, Event, EventType, Key};
+// Use std mpsc for sync listener thread
+use crate::utils::is_wayland;
 use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
 use tokio::sync::mpsc::Sender; // Use tokio mpsc for sending to async main loop
+
+#[cfg(feature = "wayland")]
+use evdev::{Device, KeyCode};
 
 #[derive(Debug, Clone, Copy)]
 pub enum HotkeyEvent {
@@ -25,7 +25,7 @@ pub fn listen_for_hotkeys(config: Arc<Config>, tx: Sender<HotkeyEvent>) -> Resul
         }
         #[cfg(not(feature = "wayland"))]
         {
-            bail!("Wayland detected, but the 'wayland' feature is not enabled in this build. Recompile with --features wayland.")
+            anyhow::bail!("Wayland detected, but the 'wayland' feature is not enabled in this build. Recompile with --features wayland.")
         }
     } else {
         info!("Using rdev listener (X11/Windows/macOS).");
@@ -141,255 +141,93 @@ fn listen_rdev(config: Arc<Config>, tx: Sender<HotkeyEvent>) -> Result<()> {
 // --- Wayland / evdev Listener (Linux Only) ---
 #[cfg(feature = "wayland")]
 fn listen_wayland(config: Arc<Config>, tx: Sender<HotkeyEvent>) -> Result<()> {
-    use input_linux::{
-        sys::{input_event, timeval}, // Use raw C structs
-        EventKind,
-        EventTime,
-        InputEvent,
-        InputId,
-        KeyId, // Use abstractions when possible
-        KeyState,
-    };
-    use input_linux_sys as sys; // Alias for ecodes
-    use libc::{nfds_t, poll, pollfd, POLLIN};
-    use std::fs::{self, File, OpenOptions};
-    use std::io;
-    use std::mem::size_of;
-    use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
-    use std::sync::mpsc::Sender as StdSender;
-    // Bridge thread needed again for tokio mpsc
-    let (std_tx, std_rx) = std::sync::mpsc::channel::<HotkeyEvent>();
+    use evdev::{EventType, KeyCode};
+    use std::collections::{HashMap, HashSet};
 
-    let target_modifier_codes = parse_modifier_evdev(&config.modifier)?;
-    let target_key_code = parse_key_evdev(&config.key)?;
-    info!(
-        "evdev: Listening for Modifier Codes: {:?}, Key Code: {:?}",
-        target_modifier_codes, target_key_code
-    );
+    // Keys we care about ------------------------------------------------------
+    let target_mods = parse_modifier_evdev(&config.modifier)?;
+    let target_key = parse_key_evdev(&config.key)?;
 
-    // Thread to handle evdev reading
-    let evdev_thread = thread::spawn(move || -> Result<()> {
-        let mut devices: HashMap<PathBuf, File> = HashMap::new();
-        let mut poll_fds: Vec<pollfd> = Vec::new();
-        let modifier_pressed = Arc::new(Mutex::new(false)); // State per listener thread
+    info!("evdev: listening for mods={target_mods:?}, key={target_key:?}");
 
-        // Function to update devices and pollfds
-        let mut update_devices =
-            |devices: &mut HashMap<PathBuf, File>, poll_fds: &mut Vec<pollfd>| -> Result<()> {
-                let current_device_paths: HashSet<PathBuf> = list_input_devices()?
-                    .into_iter()
-                    .filter(|p| {
-                        p.file_name()
-                            .map_or(false, |n| n.to_string_lossy().starts_with("event"))
-                    })
-                    .collect();
+    // One lightweight runtime -------------------------------------------------
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_io()
+        .build()?;
 
-                let known_paths: HashSet<PathBuf> = devices.keys().cloned().collect();
-
-                // Remove disconnected devices
-                for path in known_paths.difference(&current_device_paths) {
-                    info!("evdev: Device disconnected: {}", path.display());
-                    devices.remove(path);
-                }
-
-                // Add new potential keyboards
-                for path in current_device_paths.difference(&known_paths) {
-                    match open_evdev_device(path) {
-                        Ok(Some(file)) => {
-                            info!("evdev: Added keyboard device: {}", path.display());
-                            devices.insert(path.clone(), file);
-                        }
-                        Ok(None) => { /* Not a keyboard, ignore */ }
-                        Err(e) => {
-                            // Log permission errors etc.
-                            warn!("evdev: Failed to add device {}: {}", path.display(), e);
-                        }
-                    }
-                }
-
-                // Rebuild poll_fds from current devices
-                poll_fds.clear();
-                for file in devices.values() {
-                    poll_fds.push(pollfd {
-                        fd: file.as_raw_fd(),
-                        events: POLLIN,
-                        revents: 0,
-                    });
-                }
-                Ok(())
-            };
-
-        // Initial device scan
-        update_devices(&mut devices, &mut poll_fds)?;
-        if devices.is_empty() {
-            warn!("evdev: No suitable input devices found. Ensure you have read permissions for /dev/input/event* (add user to 'input' group?).")
-            // Keep polling for new devices...
+    rt.block_on(async move {
+        // Discover keyboards once at start; we’ll refresh on udev events later.
+        let mut devices = HashMap::new();
+        if let Err(e) = scan_keyboards(&mut devices) {
+            error!("Failed to scan keyboards: {}", e);
+            return;
         }
 
-        let mut buffer = [0u8; size_of::<input_event>() * 64]; // Read multiple events at once
+        // Channel every device will write into
+        let (evt_tx, mut evt_rx) = tokio::sync::mpsc::unbounded_channel::<evdev::InputEvent>();
 
-        while crate::IS_RUNNING.load(std::sync::atomic::Ordering::Relaxed) {
-            // Periodically update device list (e.g., every 5 seconds)
-            // More robust would be using udev monitoring if possible
-            // Simple periodic scan for now:
-            // TODO: implement timer check for update_devices call
-
-            if poll_fds.is_empty() {
-                thread::sleep(Duration::from_secs(1));
-                if let Err(e) = update_devices(&mut devices, &mut poll_fds) {
-                    error!("evdev: Error updating devices: {}", e);
-                }
-                continue;
-            }
-
-            // Poll for events with timeout (e.g., 200ms)
-            let num_events = unsafe { poll(poll_fds.as_mut_ptr(), poll_fds.len() as nfds_t, 200) };
-
-            if num_events < 0 {
-                let err = io::Error::last_os_error();
-                if err.kind() == io::ErrorKind::Interrupted {
+        // Spawn one async task per device
+        for dev in devices.into_values() {
+            let stream = match dev.into_event_stream() {
+                Ok(s) => s,
+                Err(e) => {
+                    error!("Failed to create event stream: {}", e);
                     continue;
-                } // Interrupted by signal, safe to retry
-                error!("evdev: poll error: {}", err);
-                thread::sleep(Duration::from_secs(1)); // Avoid spamming errors
-                continue;
-            }
-
-            if num_events == 0 {
-                continue;
-            } // Timeout, no events
-
-            // Process events from ready file descriptors
-            let mut device_to_remove: Option<PathBuf> = None;
-            for pfd in &poll_fds {
-                if pfd.revents & POLLIN != 0 {
-                    let path = devices
-                        .iter()
-                        .find(|(_, file)| file.as_raw_fd() == pfd.fd)
-                        .map(|(p, _)| p.clone()); // Find path by fd
-
-                    if let Some(p) = path.as_ref() {
-                        let device_file = devices.get_mut(p).unwrap(); // Should exist
-
-                        match read_evdev_events(device_file, &mut buffer) {
-                            Ok(events) => {
-                                for event in events {
-                                    if !crate::IS_RUNNING.load(std::sync::atomic::Ordering::Relaxed)
-                                    {
-                                        return Ok(());
-                                    }
-
-                                    if let EventKind::Key(key_id) = event.kind() {
-                                        let key_code = key_id.to_raw(); // Get u16 code
-                                        let is_pressed = event.value() == 1 || event.value() == 2; // 1=press, 2=repeat
-                                        let is_released = event.value() == 0;
-
-                                        // Check Modifier state change
-                                        if target_modifier_codes.contains(&key_code) {
-                                            // Re-evaluate overall modifier state based on *current* pressed modifiers
-                                            // This is simplified: Assume state based on this single event
-                                            // A more robust way tracks state of *all* modifier keys
-                                            if is_pressed {
-                                                *modifier_pressed.lock().unwrap() = true;
-                                                debug!(
-                                                    "evdev: Modifier {:?} pressed/repeat",
-                                                    key_code
-                                                );
-                                            } else if is_released {
-                                                // Simple: assume released if *any* target mod key is released
-                                                // Correct way needs to check if *all* are released.
-                                                *modifier_pressed.lock().unwrap() = false;
-                                                debug!("evdev: Modifier {:?} released", key_code);
-                                            }
-                                        }
-                                        // Check Target Key press *while* modifier is held
-                                        else if key_code == target_key_code && is_pressed {
-                                            if *modifier_pressed.lock().unwrap() {
-                                                debug!("evdev: Target key {:?} pressed/repeat with modifier", key_code);
-                                                // Send toggle event
-                                                if std_tx
-                                                    .send(HotkeyEvent::ToggleRecording)
-                                                    .is_err()
-                                                {
-                                                    error!("evdev: Failed to send toggle event.");
-                                                    // Consider how to handle this channel break
-                                                    return Err(anyhow!(
-                                                        "Failed to send to main thread"
-                                                    ));
-                                                }
-                                                // Optional: Prevent repeat triggers? Need to track key down state.
-                                            } else {
-                                                debug!("evdev: Target key {:?} pressed/repeat WITHOUT modifier", key_code);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            Err(e) => {
-                                if e.kind() == io::ErrorKind::WouldBlock
-                                    || e.kind() == io::ErrorKind::Interrupted
-                                {
-                                    continue; // Not really errors in non-blocking read
-                                } else if e.kind() == io::ErrorKind::NotConnected
-                                    || e.kind() == io::ErrorKind::NotFound
-                                {
-                                    // Device likely unplugged
-                                    warn!(
-                                        "evdev: Device {} disconnected or error: {}",
-                                        p.display(),
-                                        e
-                                    );
-                                    device_to_remove = Some(p.clone());
-                                } else {
-                                    error!("evdev: Error reading from {}: {}", p.display(), e);
-                                    device_to_remove = Some(p.clone());
-                                }
+                }
+            };
+            let mut stream = stream;
+            let evt_tx = evt_tx.clone();
+            tokio::spawn(async move {
+                loop {
+                    match stream.next_event().await {
+                        Ok(ev) => {
+                            if evt_tx.send(ev).is_err() {
+                                break;
                             }
                         }
+                        Err(e) => {
+                            error!("evdev: stream error: {e}");
+                            break;
+                        }
                     }
-                } // End processing ready descriptor
-            }
+                }
+            });
+        }
+        drop(evt_tx); // closes when all senders gone
 
-            // Remove device outside loop if needed
-            if let Some(path_to_remove) = device_to_remove {
-                devices.remove(&path_to_remove);
-                // Need to rebuild poll_fds after removal
-                if let Err(e) = update_devices(&mut devices, &mut poll_fds) {
-                    error!("evdev: Error updating devices after removal: {}", e);
+        // Modifier bookkeeping ------------------------------------------------
+        let mut pressed_keys: HashSet<KeyCode> = HashSet::new();
+
+        while let Some(ev) = evt_rx.recv().await {
+            // Only care about key events
+            if ev.event_type() != EventType::KEY {
+                continue;
+            }
+            let key: KeyCode = KeyCode::new(ev.code());
+            let pressed = ev.value() != 0;
+
+            if pressed {
+                pressed_keys.insert(key);
+            } else {
+                pressed_keys.remove(&key);
+            }
+            if key == target_key
+                && pressed
+                && (pressed_keys.contains(&target_mods.0) || pressed_keys.contains(&target_mods.1))
+            {
+                if let Err(e) = tx.send(HotkeyEvent::ToggleRecording).await {
+                    warn!("evdev: Hotkey receiver dropped – stopping listener: {}", e);
+                    break;
                 }
             }
-        } // End while IS_RUNNING
-
-        info!("evdev listener thread finished.");
-        Ok(())
-    }); // End evdev thread spawn
-
-    // Bridge thread (same as rdev)
-    let bridge_tx = tx.clone();
-    tokio::spawn(async move {
-        while let Ok(event) = std_rx.recv() {
-            if !crate::IS_RUNNING.load(std::sync::atomic::Ordering::Relaxed) {
-                break;
-            }
-            if bridge_tx.send(event).await.is_err() {
-                error!("Failed to bridge evdev hotkey event to main loop.");
-                break;
-            }
         }
-        info!("evdev Hotkey bridge task finished.");
     });
 
-    // Need join handle or similar if main thread needs to ensure cleanup?
-    // For now, rely on IS_RUNNING flag.
-
+    info!("evdev listener finished");
     Ok(())
 }
 
 // --- Helper Functions ---
-
-fn is_wayland() -> bool {
-    std::env::var("WAYLAND_DISPLAY").is_ok()
-}
 
 fn parse_modifier_rdev(mod_str: &str) -> Result<(Key, Key)> {
     match mod_str.to_lowercase().as_str() {
@@ -430,119 +268,122 @@ fn parse_key_rdev(key_str: &str) -> Result<Key> {
 }
 
 #[cfg(feature = "wayland")]
-fn parse_modifier_evdev(mod_str: &str) -> Result<HashSet<u16>> {
-    // Use codes from input-event-codes crate or input-linux-sys::KEY_*
-    use input_linux_sys::KEY_LEFTCTRL; // Example, import others as needed...
+fn parse_modifier_evdev(mod_str: &str) -> Result<(KeyCode, KeyCode)> {
+    use evdev::KeyCode;
     let codes = match mod_str.to_lowercase().as_str() {
-        "ctrl" | "control" => vec![sys::KEY_LEFTCTRL, sys::KEY_RIGHTCTRL],
-        "alt" => vec![sys::KEY_LEFTALT, sys::KEY_RIGHTALT],
-        "shift" => vec![sys::KEY_LEFTSHIFT, sys::KEY_RIGHTSHIFT],
-        "meta" | "super" | "win" | "cmd" | "command" => vec![sys::KEY_LEFTMETA, sys::KEY_RIGHTMETA],
+        "ctrl" | "control" => (KeyCode::KEY_LEFTCTRL, KeyCode::KEY_RIGHTCTRL),
+        "alt" => (KeyCode::KEY_LEFTALT, KeyCode::KEY_RIGHTALT),
+        "shift" => (KeyCode::KEY_LEFTSHIFT, KeyCode::KEY_RIGHTSHIFT),
+        "meta" | "super" | "win" | "cmd" | "command" => {
+            (KeyCode::KEY_LEFTMETA, KeyCode::KEY_RIGHTMETA)
+        }
         _ => return Err(anyhow!("Unsupported evdev modifier string: {}", mod_str)),
     };
-    Ok(codes.into_iter().collect())
+    Ok(codes)
 }
 
 #[cfg(feature = "wayland")]
-fn parse_key_evdev(key_str: &str) -> Result<u16> {
+fn parse_key_evdev(key_str: &str) -> Result<KeyCode> {
+    use evdev::KeyCode;
     match key_str.to_lowercase().as_str() {
-        "f1" => Ok(sys::KEY_F1),
-        "f2" => Ok(sys::KEY_F2), //... f12
-        "f11" => Ok(sys::KEY_F11),
-        "enter" | "return" => Ok(sys::KEY_ENTER),
-        "tab" => Ok(sys::KEY_TAB),
-        "space" => Ok(sys::KEY_SPACE),
-        "esc" | "escape" => Ok(sys::KEY_ESC),
-        // ... add mappings for letters, numbers ...
-        "a" => Ok(sys::KEY_A), // ... z
-        "0" => Ok(sys::KEY_0), // ... 9
+        "f1" => Ok(KeyCode::KEY_F1),
+        "f2" => Ok(KeyCode::KEY_F2),
+        "f3" => Ok(KeyCode::KEY_F3),
+        "f4" => Ok(KeyCode::KEY_F4),
+        "f5" => Ok(KeyCode::KEY_F5),
+        "f6" => Ok(KeyCode::KEY_F6),
+        "f7" => Ok(KeyCode::KEY_F7),
+        "f8" => Ok(KeyCode::KEY_F8),
+        "f9" => Ok(KeyCode::KEY_F9),
+        "f10" => Ok(KeyCode::KEY_F10),
+        "f11" => Ok(KeyCode::KEY_F11),
+        "f12" => Ok(KeyCode::KEY_F12),
+        "enter" | "return" => Ok(KeyCode::KEY_ENTER),
+        "tab" => Ok(KeyCode::KEY_TAB),
+        "space" => Ok(KeyCode::KEY_SPACE),
+        "esc" | "escape" => Ok(KeyCode::KEY_ESC),
+        "a" => Ok(KeyCode::KEY_A),
+        "b" => Ok(KeyCode::KEY_B),
+        "0" => Ok(KeyCode::KEY_0),
+        "1" => Ok(KeyCode::KEY_1),
         _ => Err(anyhow!("Unsupported evdev key string: {}", key_str)),
     }
 }
 
 #[cfg(feature = "wayland")]
-fn list_input_devices() -> Result<Vec<PathBuf>> {
-    let mut devices = Vec::new();
-    for entry in fs::read_dir("/dev/input")? {
-        let entry = entry?;
-        let path = entry.path();
-        if path
-            .file_name()
-            .map_or(false, |name| name.to_string_lossy().starts_with("event"))
-        {
-            devices.push(path);
-        }
+use std::collections::{HashMap};
+#[cfg(feature = "wayland")]
+use std::path::PathBuf;
+#[cfg(feature = "wayland")]
+fn scan_keyboards(devices: &mut HashMap<PathBuf, Device>) -> Result<()> {
+    use evdev::{enumerate, Device, EventType, KeyCode};
+    use std::collections::HashSet;
+
+    // Get current device paths
+    let current_paths: HashSet<PathBuf> = enumerate().map(|(path, _)| path).collect();
+
+    debug!("evdev: Found {} total input devices", current_paths.len());
+
+    let known_paths: HashSet<PathBuf> = devices.keys().cloned().collect();
+
+    // Remove disconnected devices
+    for path in known_paths.difference(&current_paths) {
+        info!("evdev: Device disconnected: {}", path.display());
+        devices.remove(path);
     }
-    Ok(devices)
-}
 
-#[cfg(feature = "wayland")]
-fn open_evdev_device(path: &PathBuf) -> Result<Option<File>> {
-    use input_linux::{evdev::EvdevHandle, EventKind, KeyId}; // Need traits/types
-    use std::os::unix::fs::OpenOptionsExt; // For custom flags
+    // Add new keyboard devices
+    for path in current_paths.difference(&known_paths) {
+        debug!("evdev: Checking device: {}", path.display());
+        if let Ok(device) = Device::open(&path) {
+            // Check if it's a keyboard by looking for key events and typical keyboard keys
+            if device.supported_events().contains(EventType::KEY) {
+                let keys = device
+                    .supported_keys()
+                    .map(|keys| keys.into_iter().collect::<Vec<_>>())
+                    .unwrap_or_default();
 
-    // Need read access, non-blocking might be useful later but start with blocking
-    // O_NONBLOCK can be added later if using async read or careful poll loops
-    let file = OpenOptions::new()
-        .read(true)
-        // .custom_flags(libc::O_NONBLOCK) // Add if using non-blocking I/O
-        .open(path);
+                // Check for typical keyboard keys
+                let has_keyboard_keys = keys.iter().any(|&key| {
+                    matches!(
+                        key,
+                        KeyCode::KEY_A
+                            | KeyCode::KEY_B
+                            | KeyCode::KEY_C
+                            | KeyCode::KEY_SPACE
+                            | KeyCode::KEY_ENTER
+                            | KeyCode::KEY_LEFTSHIFT
+                            | KeyCode::KEY_LEFTCTRL
+                    )
+                });
 
-    let file = match file {
-        Ok(f) => f,
-        Err(e) => {
-            if e.kind() == io::ErrorKind::PermissionDenied {
-                return Err(anyhow!(
-                    "Permission denied for {}. Run with sudo or add user to 'input' group.",
-                    path.display()
-                )
-                .context(e));
+                if has_keyboard_keys {
+                    info!(
+                        "evdev: Added keyboard device: {} ({}) with {} keys",
+                        path.display(),
+                        device.name().unwrap_or("Unknown"),
+                        keys.len()
+                    );
+                    devices.insert(path.clone(), device);
+                } else {
+                    debug!(
+                        "evdev: Device {} has KEY events but no keyboard keys",
+                        path.display()
+                    );
+                }
             } else {
-                return Err(anyhow!("Error opening device {}: {}", path.display(), e).context(e));
+                debug!(
+                    "evdev: Device {} does not support KEY events",
+                    path.display()
+                );
             }
-        }
-    };
-
-    // Check if it's a keyboard using ioctl (EVIOCGBIT) - This is more complex
-    // Simpler check: Does it report *any* key events? Not perfect.
-    // Using the `input-linux` crate's EvdevHandle might simplify this.
-
-    // For now, a basic assumption: if it opens, try reading. Refine later.
-    // Proper check requires ioctl calls with EVIOCGBIT to see if EV_KEY is supported
-    // and which keys are present. This is low-level C interop.
-
-    // Let's assume if it opens, we'll try and read KEY events.
-    // A better implementation would use ioctls here.
-    debug!("Opened device: {}", path.display());
-    Ok(Some(file))
-}
-
-#[cfg(feature = "wayland")]
-fn read_evdev_events(file: &mut File, buffer: &mut [u8]) -> io::Result<Vec<InputEvent>> {
-    use input_linux::InputEvent;
-    use std::io::Read;
-
-    let event_size = size_of::<input_event>();
-    let bytes_read = file.read(buffer)?; // Can block if file not opened O_NONBLOCK
-                                         // Note: if O_NONBLOCK, can return ErrorKind::WouldBlock
-
-    let num_events = bytes_read / event_size;
-    let mut events = Vec::with_capacity(num_events);
-
-    for i in 0..num_events {
-        let offset = i * event_size;
-        let slice = &buffer[offset..offset + event_size];
-        // Unsafe C struct interpretation
-        let raw_event: input_event = unsafe { std::ptr::read(slice.as_ptr() as *const _) };
-        // Convert to safer Rust struct if possible (or use raw directly)
-        if let Some(input_event) = InputEvent::from_raw(&raw_event) {
-            events.push(input_event);
         } else {
-            warn!(
-                "Failed to parse raw evdev event: type={}, code={}, value={}",
-                raw_event.type_, raw_event.code, raw_event.value
+            debug!(
+                "evdev: Cannot open device {}, likely permission issue",
+                path.display()
             );
         }
     }
-    Ok(events)
+
+    Ok(())
 }

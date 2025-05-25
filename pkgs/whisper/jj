@@ -1,0 +1,71 @@
+[1m[38;5;2m@[0m  [1m[38;5;13mkur[38;5;8mmrwlq[39m [38;5;3mscanhex@gmail.com[39m [38;5;14m2025-05-25 13:22:33[39m [38;5;12mf57[38;5;8me9298[39m[0m
+│  [1m[38;5;3m(no description set)[39m[0m
+[1m[38;5;14m◆[0m  [1m[38;5;5mlp[0m[38;5;8mmntyms[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-25 12:48:49[39m [38;5;5mmaster[39m [38;5;2mgit_head()[39m [1m[38;5;4m08[0m[38;5;8m3346c0[39m
+│  Update flake after 25.05 is finalized
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mxn[0m[38;5;8moyltvq[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-18 13:58:15[39m [1m[38;5;4m66e[0m[38;5;8m10ac4[39m
+│ │  Hyprland adventures (unlucky)
+│ ○  [1m[38;5;5mtpw[0m[38;5;8mootkz[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-18 13:58:15[39m [1m[38;5;4m277[0m[38;5;8mc0574[39m
+├─╯  fix rclone (don't merge, exposes secret)
+[1m[38;5;14m◆[0m  [1m[38;5;5mls[0m[38;5;8mturwvk[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-18 13:58:15[39m [1m[38;5;4m875[0m[38;5;8mf7eed[39m
+│  Update flake.lock
+│ ○  [1m[38;5;5mqq[0m[38;5;8mlxstzq[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-18 13:58:15[39m [1m[38;5;4m3b9[0m[38;5;8m5f206[39m
+├─╯  Try to make obs virtual camera work
+[1m[38;5;14m◆[0m  [1m[38;5;5mpt[0m[38;5;8mvlsnkt[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-18 13:58:15[39m [1m[38;5;4m88[0m[38;5;8m960523[39m
+│  Add rustfmt, unstable OBS
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mvtl[0m[38;5;8mxplyz[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-07 10:11:24[39m [1m[38;5;4mad0[0m[38;5;8m3014f[39m
+├─╯  Whisper Rust progress for Wayland
+│ [1m[38;5;1m×[0m  [1m[38;5;5mysp[0m[38;5;8mtvvus[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-07 09:45:24[39m [1m[38;5;4m82[0m[38;5;8mdd0b33[39m [38;5;1mconflict[39m
+│ │  use unstable hyprland
+│ ○  [1m[38;5;5mkqs[0m[38;5;8mmvusr[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-07 09:45:24[39m [1m[38;5;4mb44[0m[38;5;8m70aee[39m
+├─╯  [38;5;3m(no description set)[39m
+[1m[38;5;14m◆[0m  [1m[38;5;5mqoz[0m[38;5;8mozzoy[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-05-07 09:45:24[39m [1m[38;5;4m48[0m[38;5;8m07e072[39m
+│  Add Asus 32UCDM, change to chicago tz
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mtkul[0m[38;5;8mpsqm[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-03-26 15:55:33[39m [1m[38;5;4m9ac[0m[38;5;8m70c96[39m
+├─╯  nvim flake
+[1m[38;5;14m◆[0m  [1m[38;5;5mrq[0m[38;5;8mtzuqns[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-03-26 14:40:11[39m [1m[38;5;4m9f[0m[38;5;8mc364a1[39m
+│  only use wtype on linux
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5muwo[0m[38;5;8mvumuu[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-03-10 15:25:06[39m [1m[38;5;4m26667[0m[38;5;8m17b[39m
+├─╯  hyprland debug
+[1m[38;5;14m◆[0m  [1m[38;5;5monx[0m[38;5;8mzyuln[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-03-10 15:24:59[39m [1m[38;5;4m05[0m[38;5;8m4150bc[39m
+│  Polish whisper
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mwlu[0m[38;5;8mqpznu[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-03-08 23:38:06[39m [1m[38;5;4mf6[0m[38;5;8md119d7[39m
+├─╯  whisper hyprland wip
+[1m[38;5;14m◆[0m  [1m[38;5;5mlmr[0m[38;5;8mllpuq[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-03-08 23:38:06[39m [1m[38;5;4mab5[0m[38;5;8m987b1[39m
+│  Add firefox
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mmzr[0m[38;5;8mpsllx[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-03-08 23:38:06[39m [1m[38;5;4meee[0m[38;5;8mcf09f[39m
+├─╯  Use sway
+[1m[38;5;14m◆[0m  [1m[38;5;5mtp[0m[38;5;8mzyqmus[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-03-08 23:38:06[39m [1m[38;5;4mca6[0m[38;5;8md5b7c[39m
+│  Bump flake inputs, remove custom zed
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mxym[0m[38;5;8morpyl[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-02-16 23:33:48[39m [1m[38;5;4m651[0m[38;5;8mf1d04[39m
+├─╯  update flake.lock (looks bad so far)
+[1m[38;5;14m◆[0m  [1m[38;5;5mks[0m[38;5;8mtuzlrw[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-02-16 13:38:47[39m [1m[38;5;4m42[0m[38;5;8m7df61e[39m
+│  add zotero, fix default = false issues
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mqk[0m[38;5;8mwovktr[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-26 12:29:55[39m [1m[38;5;4mb96[0m[38;5;8m1071d[39m
+├─╯  [38;5;2m(empty)[39m [38;5;2m(no description set)[39m
+│ [1m[38;5;1m×[0m  [1m[38;5;5mkpl[0m[38;5;8mqooyp[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-26 12:29:34[39m [1m[38;5;4me28[0m[38;5;8m7a669[39m [38;5;1mconflict[39m
+│ │  try Xfce
+│ ○  [1m[38;5;5mpsk[0m[38;5;8mlrzyv[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-26 12:29:34[39m [1m[38;5;4m1c7[0m[38;5;8mb768b[39m
+├─╯  Improve boot.initrd config?
+[1m[38;5;14m◆[0m  [1m[38;5;5mqtu[0m[38;5;8mvsnnw[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-26 12:29:34[39m [1m[38;5;4mfa[0m[38;5;8m837007[39m
+│  Remove patch.patch
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mwt[0m[38;5;8mywstrm[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-20 12:55:57[39m [1m[38;5;4mda7[0m[38;5;8m5a24b[39m
+├─╯  [38;5;3m(no description set)[39m
+[1m[38;5;14m◆[0m  [1m[38;5;5mps[0m[38;5;8mrzqmrz[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-20 12:55:57[39m [1m[38;5;4mab9[0m[38;5;8m81032[39m
+│  Add tmux bindings to wezterm config
+[38;5;8m~[39m  [38;5;8m(elided revisions)[39m
+│ ○  [1m[38;5;5mrpy[0m[38;5;8myxqzo[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-20 12:55:57[39m [1m[38;5;4maa2[0m[38;5;8m43258[39m
+├─╯  lina updates
+│ ○  [1m[38;5;5mln[0m[38;5;8mtsqmrr[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-20 12:55:57[39m [1m[38;5;4m0d8[0m[38;5;8m84713[39m
+├─╯  [38;5;3m(no description set)[39m
+[1m[38;5;14m◆[0m  [1m[38;5;5mvkq[0m[38;5;8mxlmzt[39m [38;5;3mscanhex@gmail.com[39m [38;5;6m2025-01-20 12:55:57[39m [1m[38;5;4me06[0m[38;5;8m58cc7[39m
+│  Fix nvim plugins
+~

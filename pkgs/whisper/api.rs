@@ -1,4 +1,4 @@
-use crate::config::{Config, Service};
+use crate::config::Config;
 use anyhow::{anyhow, Context, Result};
 use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use log::{debug, info, warn};

@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(jj commit:*)",
+      "Bash(jj st:*)",
+      "Bash(ls:*)",
+      "Bash(man:*)",
+      "Bash(modinfo:*)",
+      "Bash(nix-shell:*)",
+      "Bash(sudo modprobe:*)",
+      "Bash(sudo rmmod:*)",
+      "Bash(uname:*)",
+      "Bash(which:*)",
+      "Bash(nix build:*)",
+      "Bash(cargo check:*)",
+      "Bash(nix-store:*)",
+      "Bash(nix develop:*)"
+    ],
+    "deny": []
+  }
+}

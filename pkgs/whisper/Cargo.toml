@@ -20,10 +20,8 @@ hound = "3.5" # WAV file handling
 rdev = "0.5"
 
 # Wayland Input Event Handling (Linux Only)
-# This crate provides raw input event access
-input-linux = { version = "0.6", optional = true }
-input-linux-sys = { version = "0.8", optional = true } # Needed for specific types/constants
-libc = { version = "0.2", optional = true } # For polling/file descriptors on Linux
+evdev = { version = "0.13", optional = true, features = ["tokio"] }
+libc = "0.2"
 
 # Keyboard/Mouse Simulation
 enigo = "0.2"
@@ -59,15 +57,11 @@ anyhow = "1" # Or use thiserror for library-style errors
 which = { version = "6", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-# Activate these deps only for Linux builds
-input-linux = { version = "0.6" }
-input-linux-sys = { version = "0.8" }
-libc = "0.2"
 which = "6"
 
 [features]
 # Feature to explicitly enable Wayland support build
-wayland = ["input-linux", "input-linux-sys", "libc", "which"]
+wayland = ["evdev", "which"]
 
 [[bin]] 
 name = "whisper"

@@ -4,12 +4,10 @@ use arboard::Clipboard;
 use enigo::{Enigo, Key, Keyboard, Settings};
 use log::{debug, info, warn};
 use std::path::Path;
-use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt; // for append
-
 
 pub async fn process_output(config: &Config, text: &str) -> Result<()> {
     if text.is_empty() {
@@ -68,13 +66,12 @@ async fn append_to_file(path: &Path, text: &str) -> Result<()> {
 fn direct_type_text(text: &str) -> Result<()> {
     info!("Attempting to paste/type text: {}...", text.chars().take(50).collect::<String>());
 
-    // 1. Try character-by-character typing first (often more reliable if it works)
-    if type_text_char_by_char(text).is_ok() {
-         info!("Text output successful (character-by-character).");
-         return Ok(());
+    if let Err(e) = type_text_char_by_char(text) {
+        warn!("Character-by-character typing failed or not supported, falling back to clipboard paste. Error: {}", e);
     } else {
-         warn!("Character-by-character typing failed or not supported, falling back to clipboard paste.");
-     }
+        info!("Text output successful (character-by-character).");
+        return Ok(());
+    }
 
     // 2. Fallback: Copy to clipboard and simulate paste
     write_to_clipboard(text)?;
@@ -92,36 +89,29 @@ fn type_text_char_by_char(text: &str) -> Result<()> {
      let mut settings = Settings::default();
      #[cfg(target_os = "linux")]
      {
+         #[cfg(feature = "wayland")]
+         if crate::utils::is_wayland() {
+             // Enigo doesn't work well
+             return type_text_wtype(text);
+         }
          // These might help on Linux/Wayland if default is too fast
-          settings.linux_delay = Duration::from_micros(10); // Default is 0
+          settings.linux_delay = 10; // microseconds, default is 0
      }
      let mut enigo = Enigo::new(&settings)?; // Pass settings
 
     // Small delay before starting
     thread::sleep(Duration::from_millis(200));
 
-    enigo.text(text);
+    match enigo.text(text) {
+        Ok(_) => {
+            info!("Enigo character typing sequence finished.");
+            Ok(())
+        }
+        Err(e) => {
+            Err(e.into())
+        }
+    }
 
-     info!("Enigo character typing sequence finished.");
-     Ok(())
-
-         /*
-    // TODO: Add platform-specific fallbacks if Enigo fails (like the Python script)
-    // This would involve checking `cfg!(target_os = "...")` and using `std::process::Command`
-    // to call `osascript` (macOS), `wtype` (Wayland), `xdotool` (X11).
-     // Example Wayland fallback attempt:
-      #[cfg(all(target_os = "linux", feature = "wayland"))]
-      {
-          if crate::hotkey::is_wayland() && type_text_wtype(text).is_ok() {
-               info!("Text typed using wtype (Wayland fallback).");
-              return Ok(());
-          }
-      }
-      // Add other fallbacks...
-
-     // If all attempts fail:
-     // Err(anyhow!("Character-by-character typing failed on this platform."))
-     // */
  }
 
 // --- Paste Simulation ---
@@ -157,13 +147,11 @@ fn simulate_paste_command() -> Result<()> {
 fn type_text_wtype(text: &str) -> Result<()> {
     use std::io::Write;
 
-     debug!("Attempting fallback typing with wtype");
-     // Check if wtype exists
      if which::which("wtype").is_err() {
          return Err(anyhow!("wtype command not found in PATH."));
      }
 
-     let mut child = Command::new("wtype")
+     let mut child = std::process::Command::new("wtype")
          .arg("-") // Read text from stdin
          .stdin(std::process::Stdio::piped())
          .stdout(std::process::Stdio::null()) // Ignore stdout
@@ -189,7 +177,6 @@ fn type_text_wtype(text: &str) -> Result<()> {
         Ok(())
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        error!("wtype execution failed. Status: {:?}, Stderr: {}", output.status, stderr);
         Err(anyhow!("wtype command failed: {}", stderr))
     }
 }
