@@ -95,6 +95,7 @@
     enable = true;
     allowedTCPPorts = [ 22 ];
   };
+  services.tailscale.enable = true;
 
   programs.nix-ld  = {
     enable = true;
