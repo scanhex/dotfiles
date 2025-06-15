@@ -183,7 +183,7 @@ in {
                 " "
             ];
           };
-          "on-click" = "pwvucontrol";
+          "on-click" = "toggle-pwvu-control";
         };
         bluetooth= {
           format = " {status}";
@@ -192,7 +192,7 @@ in {
           "tooltip-format" = "{controller_alias}\t{controller_address}";
           "tooltip-format-connected" = "{controller_alias}\t{controller_address}\n\n{device_enumerate}";
           "tooltip-format-enumerate-connected" = "{device_alias}\t{device_address}";
-          "on-click" = "GDK_DPI_SCALE=0.75 blueman-manager";
+          "on-click" = "toggle-blueman";
         };
       }
       ];

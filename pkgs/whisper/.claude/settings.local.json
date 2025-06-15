@@ -17,7 +17,8 @@
       "Bash(nix build:*)",
       "Bash(cargo check:*)",
       "Bash(nix-store:*)",
-      "Bash(nix develop:*)"
+      "Bash(nix develop:*)",
+      "WebFetch(domain:cc2cb3da-scanhex-github-io.almorozoff12345.workers.dev)"
     ],
     "deny": []
   }

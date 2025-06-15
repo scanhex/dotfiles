@@ -49,7 +49,26 @@
       };
     };
     programs.tofi.enable = true;
-    home.packages = [ pkgs.blueman pkgs.xorg.xrdb pkgs.hyprshot ];
+    home.packages = [
+      pkgs.blueman
+      pkgs.xorg.xrdb
+      pkgs.hyprshot
+      (pkgs.writeShellScriptBin "toggle-pwvu-control" ''
+         pat='pwvucontrol'          
+         if pgrep -f "$pat" >/dev/null; then
+           pkill -f "$pat"          
+         else
+           pwvucontrol & disown     
+         fi
+      '')
+      (pkgs.writeShellScriptBin "toggle-blueman" ''
+        if pgrep -f blueman-manager > /dev/null; then
+          pkill -f blueman-manager
+        else
+          GDK_DPI_SCALE=0.75 blueman-manager & disown
+        fi
+      '')
+    ];
     services.dunst.enable = true;
     xresources.properties = {
       "Xft.dpi" = 155;
