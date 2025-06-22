@@ -311,7 +311,7 @@ fn parse_key_evdev(key_str: &str) -> Result<KeyCode> {
 }
 
 #[cfg(feature = "wayland")]
-use std::collections::{HashMap};
+use std::collections::HashMap;
 #[cfg(feature = "wayland")]
 use std::path::PathBuf;
 #[cfg(feature = "wayland")]

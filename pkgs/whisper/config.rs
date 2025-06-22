@@ -2,11 +2,16 @@ use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
-#[command(author, version, about = "Whisper Dictation (Rust) - Dictate and paste via APIs")]
+#[command(
+    author,
+    version,
+    about = "Whisper Dictation (Rust) - Dictate and paste via APIs"
+)]
 pub struct Config {
     /// API key/token for the selected service. Can also be set via environment variables:
     /// OPENAI_API_KEY, ELEVENLABS_API_KEY, or REPLICATE_API_TOKEN
-    #[arg(short, long, env = "API_KEY_PLACEHOLDER", hide_env_values = true)] // Placeholder, specific env handled dynamically
+    #[arg(short, long, env = "API_KEY_PLACEHOLDER", hide_env_values = true)]
+    // Placeholder, specific env handled dynamically
     pub api_key_arg: Option<String>,
 
     /// Speech-to-text service to use
@@ -34,7 +39,7 @@ pub struct Config {
     pub retries: u32,
 
     /// Maximum recording time in seconds
-    #[arg(long, default_value_t = 60, env = "DICTATION_MAX_TIME")]
+    #[arg(long, default_value_t = 300, env = "DICTATION_MAX_TIME")]
     pub max_time: u32,
 
     // --- Resolved values (populated after parsing) ---
@@ -77,10 +82,11 @@ pub enum OutputType {
 
 // Implement logic to populate api_key after parsing args
 impl Config {
-     pub fn parse() -> Self {
+    pub fn parse() -> Self {
         let mut conf = <Self as Parser>::parse();
         let env_var_name = conf.service.get_env_var_name();
-        conf.api_key = conf.api_key_arg
+        conf.api_key = conf
+            .api_key_arg
             .clone()
             .or_else(|| std::env::var(env_var_name).ok())
             .unwrap_or_default(); // Defaults to empty string if none found

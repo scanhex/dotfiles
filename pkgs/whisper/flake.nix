@@ -39,13 +39,12 @@
           pname = "whisper";
           version = "0.1.0";
           cargoExtraArgs = pkgs.lib.optionalString pkgs.stdenv.isLinux "--features wayland";
-          postInstall = ''
-            if [ "${pkgs.stdenv.hostPlatform.system}" = "x86_64-linux" ] || \
-                [ "${pkgs.stdenv.hostPlatform.system}" = "aarch64-linux" ]; then
+          postInstall = pkgs.lib.optionalString 
+            (pkgs.stdenv.hostPlatform.system == "x86_64-linux" || pkgs.stdenv.hostPlatform.system == "aarch64-linux") 
+            ''
               wrapProgram $out/bin/whisper \
               --prefix PATH : ${pkgs.wtype}/bin
-            fi
-          '';
+            '';
         });
       in
       {

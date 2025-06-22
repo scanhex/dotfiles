@@ -24,7 +24,7 @@ const ELEVENLABS_MODEL: &str = "scribe_v1"; // Or allow configuration
 
 // OpenAI constants
 const OPENAI_API_URL: &str = "https://api.openai.com/v1/audio/transcriptions";
-const OPENAI_MODEL: &str = "gpt-4o-transcribe"; 
+const OPENAI_MODEL: &str = "gpt-4o-transcribe";
 
 // --- Replicate ---
 
@@ -373,7 +373,7 @@ pub async fn transcribe_openai(config: &Config, audio_path: &Path) -> Result<Str
         if attempt > 0 {
             let delay = Duration::from_secs(2u64.pow(attempt - 1));
             info!(
-                "Retrying OpenAI API call (attempt {}) after {:?}" ,
+                "Retrying OpenAI API call (attempt {}) after {:?}",
                 attempt + 1,
                 delay
             );
@@ -413,7 +413,10 @@ pub async fn transcribe_openai(config: &Config, audio_path: &Path) -> Result<Str
                 let status = resp.status();
                 debug!("OpenAI API Status Code: {}", status);
                 if status.is_success() {
-                    let result = resp.json::<OpenAIResponse>().await.context("Failed to parse OpenAI JSON response")?;
+                    let result = resp
+                        .json::<OpenAIResponse>()
+                        .await
+                        .context("Failed to parse OpenAI JSON response")?;
                     info!("OpenAI transcription successful.");
                     return Ok(result.text.trim().to_string());
                 } else if status == StatusCode::TOO_MANY_REQUESTS || status.is_server_error() {

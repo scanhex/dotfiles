@@ -1,21 +1,20 @@
 use anyhow::{anyhow, Context, Result};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{SampleFormat, SampleRate, Stream, StreamConfig, SupportedStreamConfigRange};
+use cpal::{SampleRate, Stream, StreamConfig, SupportedStreamConfigRange};
 use hound::{SampleFormat as HoundSampleFormat, WavSpec, WavWriter};
 use log::{debug, info, warn};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-pub const SAMPLE_RATE: u32 = 44100;
-pub const CHANNELS: u16 = 1;
-// Choose f32 as it's common and APIs often prefer it. PyAudio used paFloat32.
-const SAMPLE_FORMAT: SampleFormat = SampleFormat::F32;
+pub const MAX_SAMPLE_RATE: u32 = 44100;
+pub const MAX_CHANNELS: u16 = 2;
 
 pub struct AudioRecorder {
     // Store frames in an Arc<Mutex> to allow access from audio callback thread
     frames: Arc<Mutex<Vec<f32>>>,
     stream: Option<Stream>, // Keep the stream alive
+    stream_config: Option<StreamConfig>,
     max_duration: Duration,
     max_frames: usize,
     is_recording_flag: Arc<Mutex<bool>>, // Flag to signal recording state
@@ -24,15 +23,16 @@ pub struct AudioRecorder {
 impl AudioRecorder {
     pub fn new(max_time_seconds: u32) -> Result<Self> {
         let max_duration = Duration::from_secs(max_time_seconds as u64);
-        let max_frames = (SAMPLE_RATE * CHANNELS as u32 * max_time_seconds) as usize;
+        let max_frames = (MAX_SAMPLE_RATE * MAX_CHANNELS as u32 * max_time_seconds) as usize;
         info!(
-            "Audio Recorder configured: {} Hz, {} channels, Max Duration: {:?}, Max Frames: {}",
-            SAMPLE_RATE, CHANNELS, max_duration, max_frames
+            "Audio Recorder configured: max {} Hz, max {} channels, Max Duration: {:?}, Max Frames: {}",
+            MAX_SAMPLE_RATE, MAX_CHANNELS, max_duration, max_frames
         );
 
         Ok(Self {
             frames: Arc::new(Mutex::new(Vec::with_capacity(max_frames))),
             stream: None,
+            stream_config: None,
             max_duration,
             max_frames,
             is_recording_flag: Arc::new(Mutex::new(false)),
@@ -54,12 +54,6 @@ impl AudioRecorder {
             .context("No default input device available")?;
         info!("Using audio input device: {}", device.name()?);
 
-        let config = StreamConfig {
-            channels: CHANNELS,
-            sample_rate: SampleRate(SAMPLE_RATE),
-            buffer_size: cpal::BufferSize::Default, // Or fixed size like 1024?
-        };
-
         // Check if format is supported
         let supported_configs: Vec<SupportedStreamConfigRange> =
             device.supported_input_configs()?.collect();
@@ -72,25 +66,27 @@ impl AudioRecorder {
                 config.sample_format()
             );
         }
-        let supported = &supported_configs
+        let supported = supported_configs
             .iter()
-            .filter(|c| {
-                c.sample_format() == SAMPLE_FORMAT
-                    && c.channels() == CHANNELS
-                    && c.min_sample_rate() <= SampleRate(SAMPLE_RATE)
-                    && c.max_sample_rate() >= SampleRate(SAMPLE_RATE)
-            })
-            .next();
+            .filter(|c| c.channels() <= MAX_CHANNELS && c.min_sample_rate().0 <= MAX_SAMPLE_RATE)
+            .max_by_key(|c| (c.channels(), c.max_sample_rate().0))
+            .ok_or_else(|| anyhow!("No supported audio configurations found"))?;
 
-        if supported.is_none() {
-            // Fallback check? Try nearest supported config?
-            return Err(anyhow!(
-                "Default device does not support required format: {}Hz, {}ch, {:?}",
-                SAMPLE_RATE,
-                CHANNELS,
-                SAMPLE_FORMAT
-            ));
-        }
+        let config = StreamConfig {
+            channels: supported.channels(),
+            sample_rate: SampleRate(std::cmp::min(
+                supported.max_sample_rate().0,
+                MAX_SAMPLE_RATE,
+            )),
+            buffer_size: cpal::BufferSize::Default,
+        };
+
+        info!(
+            "Using audio format: {}Hz, {}ch, {:?}",
+            config.sample_rate.0,
+            config.channels,
+            supported.sample_format()
+        );
         info!("Device supports the required audio format.");
 
         let shared_frames = self.frames.clone();
@@ -134,6 +130,8 @@ impl AudioRecorder {
             None, // Timeout - None means block indefinitely
         )?;
 
+        self.stream_config = Some(config);
+
         stream.play()?;
         self.stream = Some(stream);
         *self.is_recording_flag.lock().expect("Mutex poisoned") = true;
@@ -142,7 +140,7 @@ impl AudioRecorder {
         Ok(())
     }
 
-    pub fn stop(&mut self) -> Result<Option<Vec<f32>>> {
+    pub fn stop(&mut self) -> Result<Option<(StreamConfig, Vec<f32>)>> {
         // Signal the callback to stop adding data
         *self.is_recording_flag.lock().expect("Mutex poisoned") = false;
 
@@ -158,8 +156,10 @@ impl AudioRecorder {
         let frames = self.frames.lock().expect("Mutex poisoned");
         if frames.is_empty() {
             Ok(None)
+        } else if self.stream_config.is_none() {
+            Err(anyhow!("No stream config - start() was supposed to fill it"))
         } else {
-            Ok(Some(frames.clone())) // Clone the data to return
+            Ok(Some((self.stream_config.clone().unwrap(), frames.clone()))) 
         }
     }
 

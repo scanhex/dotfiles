@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use cpal::StreamConfig;
 use log::{debug, error, info, warn};
 use std::path::PathBuf;
 use std::process::exit;
@@ -154,13 +155,13 @@ async fn main() -> Result<()> {
                         } else {
                              info!(">>> Stopping recording and processing... <<<");
                             match recorder.stop() {
-                                Ok(Some(audio_data)) => {
+                                Ok(Some((stream_config, audio_data))) => {
                                     info!("Recording stopped. Got {} samples.", audio_data.len());
                                      // Process in background task not to block main loop
                                      let task_config = config.clone();
                                      let task_cache_dir = cache_dir.clone();
                                      tokio::spawn(async move {
-                                         process_recorded_audio(task_config, task_cache_dir, audio_data).await;
+                                         process_recorded_audio(task_config, task_cache_dir, stream_config, audio_data).await;
                                      });
                                 }
                                 Ok(None) => {
@@ -193,13 +194,23 @@ async fn main() -> Result<()> {
 }
 
 // Function to handle processing audio data (can be spawned as a task)
-async fn process_recorded_audio(config: Arc<Config>, cache_dir: PathBuf, audio_data: Vec<f32>) {
+async fn process_recorded_audio(
+    config: Arc<Config>,
+    cache_dir: PathBuf,
+    stream_config: StreamConfig,
+    audio_data: Vec<f32>,
+) {
     // 1. Save to WAV
     let filename = format!("recording_{}.wav", chrono::Utc::now().timestamp_millis());
     let wav_path = cache_dir.join(&filename);
     info!("Saving audio to: {}", wav_path.display());
 
-    match audio::save_f32_to_wav(&wav_path, &audio_data, audio::SAMPLE_RATE, audio::CHANNELS) {
+    match audio::save_f32_to_wav(
+        &wav_path,
+        &audio_data,
+        stream_config.sample_rate.0,
+        stream_config.channels,
+    ) {
         Ok(_) => {
             info!("Audio saved successfully.");
             // 2. Transcribe using API

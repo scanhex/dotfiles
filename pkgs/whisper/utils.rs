@@ -16,7 +16,11 @@ pub fn get_cache_dir() -> Result<PathBuf> {
 pub async fn cleanup_old_files(dir: &PathBuf, max_age: Duration) -> Result<usize> {
     let mut count = 0;
     let cutoff = SystemTime::now() - max_age;
-    debug!("Cleaning up files older than {:?} in {}", cutoff, dir.display());
+    debug!(
+        "Cleaning up files older than {:?} in {}",
+        cutoff,
+        dir.display()
+    );
 
     let mut entries = fs::read_dir(dir)
         .await
@@ -24,19 +28,20 @@ pub async fn cleanup_old_files(dir: &PathBuf, max_age: Duration) -> Result<usize
 
     while let Some(entry) = entries.next_entry().await? {
         let path = entry.path();
-        if path.is_file() && path.extension().map_or(false, |ext| ext == "wav") { // Simple check for .wav
-             let metadata = fs::metadata(&path).await?;
-             if let Ok(modified) = metadata.modified() {
-                 if modified < cutoff {
-                     debug!("Removing old file: {}", path.display());
+        if path.is_file() && path.extension().map_or(false, |ext| ext == "wav") {
+            // Simple check for .wav
+            let metadata = fs::metadata(&path).await?;
+            if let Ok(modified) = metadata.modified() {
+                if modified < cutoff {
+                    debug!("Removing old file: {}", path.display());
                     if let Err(e) = fs::remove_file(&path).await {
                         log::warn!("Failed to remove old file {}: {}", path.display(), e);
                     } else {
                         count += 1;
                     }
-                 }
-             }
-         }
+                }
+            }
+        }
     }
     Ok(count)
 }
@@ -44,4 +49,3 @@ pub async fn cleanup_old_files(dir: &PathBuf, max_age: Duration) -> Result<usize
 pub fn is_wayland() -> bool {
     std::env::var("WAYLAND_DISPLAY").is_ok()
 }
-
