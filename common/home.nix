@@ -55,7 +55,6 @@ in
           aliases = {
             bo = ["bookmark"];
           };
-          git.subprocess = true;
           merge-tools.difft.diff-args = ["--color=always" "$left" "$right" ];
           ui.diff.tool = "difft";
           ui.default-command = ["log" "-r" "present(@) | ancestors(immutable_heads().., 2) | present(trunk())"];
