@@ -19,7 +19,7 @@ return {
             require('lspconfig').clangd.setup {
                 capabilities = capabilities,
                 --                cmd = { os.getenv('HOME') .. "/.nix-profile/bin/clangd", "--offset-encoding=utf-16", "-j=4", "--background-index", "--compile-commands-dir=./build/linux-gnu.release/cmake/" },
-                cmd = { nixProfilePath .. "/bin/clangd", "--offset-encoding=utf-16", "-j=4", "--background-index" },
+                cmd = { clangd_path, "--offset-encoding=utf-16", "-j=4", "--background-index" },
             }
             require('lspconfig').pyright.setup {
                 capabilities = capabilities

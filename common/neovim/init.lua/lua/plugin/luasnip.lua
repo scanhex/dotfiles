@@ -42,7 +42,7 @@ return {
       }),
     })
 
-    local local_config = require("plugins.local.luasnip")
+    local local_config = require("plugin.local.luasnip")
     local_config()
   end,
 }

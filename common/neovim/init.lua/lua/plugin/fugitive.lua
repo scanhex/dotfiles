@@ -3,7 +3,7 @@ return {
   init = function()
     vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
 
-    local local_config = require("plugins.local.fugitive")
+    local local_config = require("plugin.local.fugitive")
     local_config()
 
     local ThePrimeagen_Fugitive = vim.api.nvim_create_augroup("ThePrimeagen_Fugitive", {})
