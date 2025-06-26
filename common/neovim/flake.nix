@@ -23,6 +23,7 @@
             inherit system;
             config.allowUnfree = true;
           };
+          neovim-unwrapped = pkgs.neovim-unwrapped;
 
           unstable = import nixpkgs-unstable {
             inherit system;
@@ -148,7 +149,7 @@
           '';
 
           nvimWrapped = pkgs.wrapNeovimUnstable
-            pkgs.neovim-unwrapped 
+            neovim-unwrapped
             (pkgs.neovimUtils.makeNeovimConfig {
               wrapRc = true;
               luaRcContent = luaRc;
@@ -180,11 +181,11 @@
               description = "scanhex's portable Neovim + Lazy setup";
               maintainers = [ "scanhex" ];
               license = pkgs.lib.licenses.mit;
-              platforms = pkgs.lib.platforms.all;
+              platforms = neovim-unwrapped.meta.platforms;
             };
             paths = [ runner extraEnv lazyPath tsBundle ];
           } // {
-            lua = neovim-nightly-overlay.packages.${system}.default.lua;
+            lua = neovim-unwrapped.lua;
           };
         in {
           packages.default = alexNeovimPackage;
