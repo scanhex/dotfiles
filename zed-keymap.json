@@ -44,6 +44,12 @@
   {
     "context": "VimControl && !menu",
     "bindings": {}
+  },
+  {
+    "context": "Editor && showing_completions",
+    "bindings": {
+      "tab": "editor::AcceptEditPrediction"
+    }
   }
 ]
 
