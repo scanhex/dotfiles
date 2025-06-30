@@ -60,17 +60,9 @@
   programs.zsh.enable = true;
 
   #enable audio 
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-# If you want to use JACK applications, uncomment this
-#jack.enable = true;
-  };
+  my.pipewire.enable = true;
 
-  time.timeZone = "America/New_York";
+  time.timeZone = "America/Chicago";
 
   hm.my.wezterm.enable = true;
   my.work.enable = true;
