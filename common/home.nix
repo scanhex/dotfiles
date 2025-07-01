@@ -53,7 +53,7 @@ in
           user.name = config.my.name;
           user.email = config.my.email;
           aliases = {
-            bo = ["bookmark"];
+            q = ["squash"];
           };
           merge-tools.difft.diff-args = ["--color=always" "$left" "$right" ];
           ui.diff.tool = "difft";
