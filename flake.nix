@@ -6,8 +6,9 @@
             url = "github:NixOS/nixpkgs/nixos-25.05";
         };
         nixpkgs-unstable = {
-            url = "github:NixOS/nixpkgs/e5b167bc7b3749c1a2eba831e7048e37738b4b1c";
+            url = "github:NixOS/nixpkgs/nixos-unstable";
         };
+        determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
         scanhex-neovim = {
             url = "path:./common/neovim";
             inputs.nixpkgs.follows = "nixpkgs";

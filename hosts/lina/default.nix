@@ -67,7 +67,7 @@
 	  packages = with pkgs; [
 		  google-chrome
 		  firefox
-      discord-canary
+      unstable.discord-canary
       telegram-desktop
       zotero
       obsidian
@@ -111,7 +111,6 @@
   programs.zsh.enable = true;
 
   #enable audio 
-  security.rtkit.enable = true;
   my.pipewire.enable = true;
 
   time.timeZone = "America/Chicago";

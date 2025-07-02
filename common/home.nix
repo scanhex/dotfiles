@@ -13,7 +13,6 @@ in
       pkgs.clang
       pkgs.rustc
       pkgs.rustfmt
-      pkgs.nix
       pkgs.cargo
       pkgs.gnumake
       pkgs.cmake
@@ -56,7 +55,7 @@ in
             q = ["squash"];
           };
           merge-tools.difft.diff-args = ["--color=always" "$left" "$right" ];
-          ui.diff.tool = "difft";
+          ui.diff-formatter = "difft";
           ui.default-command = ["log" "-r" "present(@) | ancestors(immutable_heads().., 2) | present(trunk())"];
           revsets.log = "ancestors(@)";
           snapshot.auto-track = "~(root:\"personal/\" | root:\"Session.vim\" | root:\".clangd\" | root:\"compile_commands.json\" | root:\"CMakePresets.json\")";
@@ -73,14 +72,14 @@ in
   my.neovim.enable = true;
   my.zellij.enable = true;
   xdg.enable = true;
-  nix = {
-    enable = true;
-    settings = {
-      trusted-users = [ config.my.user ];
-      use-xdg-base-directories = true;
-      experimental-features = [ "nix-command" "flakes" ];
-    };
-  };
+  # nix = {
+  #   enable = false;
+  #   settings = {
+  #     trusted-users = [ config.my.user ];
+  #     use-xdg-base-directories = true;
+  #     experimental-features = [ "nix-command" "flakes" ];
+  #   };
+  # };
   programs.bash.sessionVariables = {
     NIXPKGS_ALLOW_UNFREE = "1";
   };

@@ -74,6 +74,7 @@ in
       hostname = "lina";
       modules = [ 
                 ../hosts/lina
+                self.inputs.determinate.nixosModules.default
                 ];
     };
   };

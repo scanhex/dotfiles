@@ -11,12 +11,19 @@
 
   boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "ahci" "thunderbolt" "usbhid" "usb_storage" "sd_mod" ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-amd" ];
+  #boot.kernelModules = [ "kvm-amd" ];
+  boot.blacklistedKernelModules = [ "amdgpu" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
     { device = "/dev/disk/by-uuid/7662605a-69e6-4e29-be80-7994a58360ec";
       fsType = "btrfs";
+    };
+
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/C6B7-2943";
+      fsType = "vfat";
+      neededForBoot = true;
     };
 
   swapDevices = [ ];
@@ -34,25 +41,22 @@
   hardware.graphics.enable = true;
   hardware.graphics.extraPackages = with pkgs; [ opencl-headers ];
   hardware.nvidia = {
-    open = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable; # must keep in sync
+      open = true;
+    modesetting.enable = true;
+    powerManagement = {
+      enable = true;
+    };
+    prime = {
+      # offload = {
+      #   enable = true;
+      #   enableOffloadCmd = true;
+      # };
+      sync.enable = true;
+      nvidiaBusId = "PCI:01:00:0";
+      amdgpuBusId = "PCI:74:00:0";
+    };
   };
-#  hardware.nvidia = { 
-#      package = config.boot.kernelPackages.nvidiaPackages.stable;
-#      modesetting.enable = true;
-#      
-#      powerManagement = {
-#          enable = true;
-#          finegrained = true;
-#      };
-#      prime = {
-#          offload = {
-#              enable = true;
-#              enableOffloadCmd = true;
-#          };
-#          nvidiaBusId = "PCI:01:00:0";
-#          amdgpuBusId = "PCI:74:00:0";
-#      };
-#  };
   services.xserver.videoDrivers = [ "nvidia" ];
 
 
