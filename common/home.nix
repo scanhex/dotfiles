@@ -70,6 +70,7 @@ in
       jjp = "jj fix && jj git push";
       jjf = "jj git fetch";
   };
+  my.neovim.enable = true;
   my.zellij.enable = true;
   xdg.enable = true;
   nix = {
