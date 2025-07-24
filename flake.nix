@@ -8,7 +8,14 @@
         nixpkgs-unstable = {
             url = "github:NixOS/nixpkgs/nixos-unstable";
         };
-        determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+        caelestia-shell = {
+          url = "github:caelestia-dots/shell";
+          inputs.nixpkgs.follows = "nixpkgs-unstable";
+        };
+        determinate = {
+          url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+          inputs.nixpkgs.follows = "nixpkgs";
+        };
         scanhex-neovim = {
             url = "path:./common/neovim";
             inputs.nixpkgs.follows = "nixpkgs";
@@ -30,7 +37,7 @@
             url = "github:nix-community/home-manager/release-25.05";
             inputs.nixpkgs.follows = "nixpkgs";
         };
-        stylix.url = "github:danth/stylix/release-25.05";
+        #stylix.url = "github:danth/stylix/release-25.05";
     };
 
 	outputs = inputs@{ self, nixpkgs, flake-parts, ... }:
