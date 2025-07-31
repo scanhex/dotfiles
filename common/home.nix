@@ -19,7 +19,7 @@ in
       pkgs.gnumake
       pkgs.cmake
       pkgs.ninja
-      pkgs.clang-tools_19
+      pkgs.unstable.llvmPackages_21.clang-tools
       pkgs.nushell
       pkgs.bat
       pkgs.tig
@@ -30,10 +30,10 @@ in
       pkgs.ripgrep
       pkgs.pciutils
       pkgs.nodejs_24
-      pkgs.yazi
       pkgs.unstable.jujutsu
       pkgs.unstable.ruff
       pkgs.unstable.uv
+      pkgs.yazi
       pythonEnv
       nix-user-chroot-patch
   ] ++ lib.optionals pkgs.stdenv.isLinux [ pkgs.glibc pkgs.gdb pkgs.valgrind ];

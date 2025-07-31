@@ -6,6 +6,9 @@
     packages = [
       inputs.scanhex-neovim.packages.${pkgs.system}.default
     ];
-    sessionVariables.EDITOR = "nvim";
+    sessionVariables = {
+      EDITOR = "nvim";
+      MANPAGER = "nvim +Man!";
+    };
   };
 }
