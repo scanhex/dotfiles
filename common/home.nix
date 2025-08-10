@@ -8,6 +8,7 @@ in
 
   home.packages = [
       pkgs.bashInteractive
+      pkgs.bun
       pkgs.dnsutils
       pkgs.tmux
       pkgs.clang

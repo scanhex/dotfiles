@@ -17,6 +17,11 @@
         programs.ghostty = lib.mkIf (!config.my.ghostty.unmanaged) {
             enable = true;
             package = pkgs.unstable.ghostty;
+            settings = {
+              copy-on-select = "clipboard";
+              scrollback-limit = 64000000;
+              app-notifications = "no-clipboard-copy";
+            };
         };
         home.file.".config/ghostty/config".text = builtins.readFile ./config + "\n" + "command = ${pkgs.bashInteractive}/bin/bash -l\n";
     };
