@@ -7,7 +7,7 @@
 }:
 {
 
-  home.packages = [ pkgs.raycast ];
+  home.packages = [ pkgs.unstable.raycast ];
 
   imports = lib.my.getHmModules [ ./. ];
 }
