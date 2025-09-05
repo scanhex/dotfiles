@@ -32,8 +32,16 @@ let
           news.display = "silent";
           news.json = lib.mkForce { };
           news.entries = lib.mkForce [ ];
-          # set the same option as home-manager in nixos/nix-darwin, to generate the same derivation
-          nix.package = pkgs.nix;
+          nix = {
+            enable = true;
+            # set the same option as home-manager in nixos/nix-darwin, to generate the same derivation
+            package = pkgs.nix;
+            settings = {
+              trusted-users = [ config.my.user ];
+              use-xdg-base-directories = true;
+              experimental-features = [ "nix-command" "flakes" ];
+            };
+          };
         }
         ../common/home.nix
       ] ++ modules;

@@ -72,14 +72,6 @@ in
   my.neovim.enable = true;
   my.zellij.enable = true;
   xdg.enable = true;
-  # nix = {
-  #   enable = false;
-  #   settings = {
-  #     trusted-users = [ config.my.user ];
-  #     use-xdg-base-directories = true;
-  #     experimental-features = [ "nix-command" "flakes" ];
-  #   };
-  # };
   programs.bash.sessionVariables = {
     NIXPKGS_ALLOW_UNFREE = "1";
   };
