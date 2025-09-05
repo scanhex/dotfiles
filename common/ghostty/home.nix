@@ -18,6 +18,6 @@
             enable = true;
             package = pkgs.unstable.ghostty;
         };
-        home.file.".config/ghostty/config".source = ./config;
+        home.file.".config/ghostty/config".text = builtins.readFile ./config + "\n" + "command = ${pkgs.bashInteractive}/bin/bash -l\n";
     };
 }
