@@ -25,9 +25,38 @@
           };
           neovim-unwrapped = pkgs.neovim-unwrapped;
 
+          clangToolsDarwinOverlay = final: prev:
+            let
+              queryDrivers = prev.lib.concatStringsSep "," [
+                "/nix/store/*-clang-wrapper-*/bin/clang"
+                "/nix/store/*-clang-wrapper-*/bin/clang++"
+              ];
+
+              wrapClangTools = clangTools:
+                clangTools.overrideAttrs (old: {
+                  postInstall = (old.postInstall or "") + ''
+                    if [ -x "$out/bin/clangd" ]; then
+                      substituteInPlace "$out/bin/clangd" \
+                        --replace-warn 'extendcpath=true' 'extendcpath=false' \
+                        --replace-warn '$(basename $0)-unwrapped "$@"' '$(basename $0)-unwrapped --query-driver='"'"'${queryDrivers}'"'"' "$@"'
+                    fi
+                  '';
+                });
+            in
+            if prev.stdenv.hostPlatform.isDarwin then
+              {
+                llvmPackages_21 = prev.llvmPackages_21.overrideScope (_: llvmPrev: {
+                  clang-tools = wrapClangTools llvmPrev.clang-tools;
+                });
+                clang-tools = final.llvmPackages_21.clang-tools;
+              }
+            else
+              { };
+
           unstable = import nixpkgs-unstable {
             inherit system;
             config.allowUnfree = true;
+            overlays = [ clangToolsDarwinOverlay ];
           };
 
           lazyPlugins = with pkgs.vimPlugins; [

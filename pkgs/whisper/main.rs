@@ -225,10 +225,7 @@ async fn process_recorded_audio(
             match transcription_result {
                 Ok(text) => {
                     if !text.is_empty() {
-                        info!(
-                            "Transcription successful: {}...",
-                            text.chars().take(50).collect::<String>()
-                        );
+                        println!("{}", text);
                         // 3. Process Output
                         if let Err(e) = output::process_output(&config, &text.as_str()).await {
                             error!("Failed to process output: {}", e);

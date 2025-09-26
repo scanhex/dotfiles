@@ -114,5 +114,20 @@
     remapCapsLockToControl = true;
     swapLeftCommandAndLeftAlt = true;
   };
+
+  # Don't do remapping for IQUNIX MQ80
+  launchd.user.agents.iqunix-keyboard-remap = {
+    serviceConfig = {
+      ProgramArguments = [
+        "/usr/bin/hidutil"
+        "property"
+        "--matching"
+        ''{"VendorID":0x245a,"ProductID":0x8276}''
+        "--set"
+        ''{"UserKeyMapping":[]}''
+      ];
+      RunAtLoad = true;
+    };
+  };
   system.stateVersion = 4;
 }
