@@ -24,6 +24,17 @@ with lib;
           "bluez5.enable-msbc"  = false;             # no HFP/HSP fallback
         };
       };
+      wireplumber.extraConfig."52-a2dp-pin-xm6" = {
+        "monitor.bluez.rules" = [ {
+            matches = [ { "device.name" = "bluez_card.80_99_E7_D4_1C_BC"; } ];
+            apply-properties = {
+              "bluez5.auto-switch-profile" = false;
+              "bluez5.default.profile" = "a2dp-sink";
+              "bluez5.default.codec" = "sbc"; 
+            };
+          }
+        ];
+      };
     };
   };
 }

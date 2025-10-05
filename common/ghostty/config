@@ -1,6 +1,0 @@
-macos-option-as-alt = true
-font-family = "Iosevka Nerd Font Mono"
-adjust-cell-width = "-5%"
-copy-on-select = clipboard
-shell-integration = bash
-maximize = true

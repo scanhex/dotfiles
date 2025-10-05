@@ -18,11 +18,16 @@
             enable = true;
             package = pkgs.unstable.ghostty;
             settings = {
+              macos-option-as-alt = true;
+              font-family = "Iosevka Nerd Font Mono";
+              adjust-cell-width = "-5%";
               copy-on-select = "clipboard";
+              shell-integration = "bash";
+              maximize = true;
               scrollback-limit = 64000000;
               app-notifications = "no-clipboard-copy";
+              command = "${pkgs.bashInteractive}/bin/bash -l";
             };
         };
-        home.file.".config/ghostty/config".text = builtins.readFile ./config + "\n" + "command = ${pkgs.bashInteractive}/bin/bash -l\n";
     };
 }
