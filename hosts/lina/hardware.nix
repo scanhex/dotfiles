@@ -42,7 +42,7 @@
   hardware.graphics.extraPackages = with pkgs; [ opencl-headers ];
   hardware.nvidia = {
     package = config.boot.kernelPackages.nvidiaPackages.stable; # must keep in sync
-      open = true;
+    open = true;
     modesetting.enable = true;
     powerManagement = {
       enable = true;

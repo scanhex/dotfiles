@@ -19,6 +19,9 @@ let
           overlays = (import ../overlays {inherit inputs system; }) ++ overlays;
           config = {
             allowUnfree = true;
+            permittedInsecurePackages = [
+              "mbedtls-2.28.10"
+            ];
           };
         } { inherit config; }
       );

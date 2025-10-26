@@ -39,7 +39,7 @@
     ];
   };
 
-  boot.kernelPackages = pkgs.unstable.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest; 
   hardware.bluetooth = {
       enable = true; 
       powerOnBoot = true;
