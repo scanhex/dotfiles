@@ -7,6 +7,7 @@ in
   imports = lib.my.getHmModules [ ./. ];
 
   home.packages = [
+      pkgs.nix
       pkgs.bashInteractive
       pkgs.bun
       pkgs.dnsutils
@@ -27,12 +28,12 @@ in
       pkgs.unstable.ast-grep
       pkgs.difftastic
       pkgs.ripgrep
-      pkgs.unstable.jujutsu
-      pkgs.unstable.ruff
-      pkgs.unstable.uv
       pkgs.pciutils
       pkgs.nodejs_24
       pkgs.yazi
+      pkgs.unstable.jujutsu
+      pkgs.unstable.ruff
+      pkgs.unstable.uv
       pythonEnv
       nix-user-chroot-patch
   ] ++ lib.optionals pkgs.stdenv.isLinux [ pkgs.glibc pkgs.gdb pkgs.valgrind ];

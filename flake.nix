@@ -12,10 +12,6 @@
           url = "github:caelestia-dots/shell";
           inputs.nixpkgs.follows = "nixpkgs-unstable";
         };
-        determinate = {
-          url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
-          inputs.nixpkgs.follows = "nixpkgs";
-        };
         scanhex-neovim = {
             url = "path:./common/neovim";
             inputs.nixpkgs.follows = "nixpkgs";

@@ -43,6 +43,16 @@ let
 							inputs = self.inputs;
 						};
 					};
+          nix = {
+            enable = true;
+            # set the same option as home-manager in nixos/nix-darwin, to generate the same derivation
+            package = pkgs.nix;
+            settings = {
+              trusted-users = [ username ];
+              use-xdg-base-directories = true;
+              experimental-features = [ "nix-command" "flakes" ];
+            };
+          };
 				}
 			] 
             ++ modules;
@@ -74,7 +84,6 @@ in
       hostname = "lina";
       modules = [ 
                 ../hosts/lina
-                self.inputs.determinate.nixosModules.default
                 ];
     };
   };
