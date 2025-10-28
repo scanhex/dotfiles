@@ -22,6 +22,7 @@ with lib;
           "bluez5.auto-connect" = [ "a2dp_sink" ];   # switch to A2DP on connect
           "bluez5.enable-sbc-xq" = true;             # better SBC quality
           "bluez5.enable-msbc"  = false;             # no HFP/HSP fallback
+          "api.bluez5.default-buffer" = 512;         # increase buffer size
         };
       };
       wireplumber.extraConfig."52-a2dp-pin-xm6" = {
