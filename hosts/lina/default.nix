@@ -102,11 +102,7 @@
     package = pkgs.nix-ld-rs;
     libraries = config.hardware.graphics.extraPackages;
   };
-  programs.steam = {
-      enable = true;
-      remotePlay.openFirewall = true;
-      extraCompatPackages = [ pkgs.unstable.proton-ge-bin ];
-  };
+  my.steam.enable = true;
 
   programs.zsh.enable = true;
 
