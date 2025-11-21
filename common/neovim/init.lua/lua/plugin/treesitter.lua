@@ -17,8 +17,20 @@ return {
         },
         config = function()
             local configs = require("nvim-treesitter.configs")
+            local parser_install_dir = vim.env.NVIM_TREESITTER_PARSERS
+
+            if parser_install_dir ~= nil and parser_install_dir ~= "" then
+                parser_install_dir = vim.fn.expand(parser_install_dir)
+                if vim.fn.isdirectory(parser_install_dir) == 1 then
+                    -- Prefer Nix-provided, prebuilt parsers when available
+                    vim.opt.runtimepath:append(parser_install_dir)
+                else
+                    parser_install_dir = nil
+                end
+            end
 
             configs.setup({
+                parser_install_dir = parser_install_dir,
                 -- A list of parser names, or "all"
                 -- ensure_installed = "all",
                 ignore_install = "all",

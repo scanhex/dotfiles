@@ -57,7 +57,6 @@
             toggleterm-nvim
             neodev-nvim
             harpoon
-            gitsigns-nvim
             diffview-nvim
             lazygit-nvim
             nvim-surround
@@ -68,13 +67,32 @@
           ];
 
           mkEntry = drv:
-            if pkgs.lib.isDerivation drv then {
-              name = pkgs.lib.getName drv;
-              path = drv;
-            } else
-              drv;
+            if pkgs.lib.isDerivation drv then
+              let
+                base = drv.pname or (pkgs.lib.getName drv);
+                dotted =
+                  if pkgs.lib.hasSuffix "-nvim" base then
+                    "${pkgs.lib.removeSuffix "-nvim" base}.nvim"
+                  else if pkgs.lib.hasSuffix "-vim" base then
+                    "${pkgs.lib.removeSuffix "-vim" base}.vim"
+                  else
+                    base;
+                stripped =
+                  if pkgs.lib.hasSuffix "-nvim" base then
+                    pkgs.lib.removeSuffix "-nvim" base
+                  else if pkgs.lib.hasSuffix "-vim" base then
+                    pkgs.lib.removeSuffix "-vim" base
+                  else
+                    base;
+                names = pkgs.lib.unique [ base dotted stripped ];
+              in map (name: {
+                inherit name;
+                path = drv;
+              }) names
+            else
+              [ drv ];
 
-          lazyPath = pkgs.linkFarm "lazy-plugins" (map mkEntry lazyPlugins);
+          lazyPath = pkgs.linkFarm "lazy-plugins" (pkgs.lib.concatMap mkEntry lazyPlugins);
 
           extraTools = with pkgs; [
             ripgrep
@@ -94,20 +112,23 @@
 
           tsParsers = (unstable.vimPlugins.nvim-treesitter.withPlugins (p:
             with p; [
-              cpp
+              bash
               cmake
-              rust
+              cpp
+              diff
+              git_config
+              gitcommit
+              gitignore
+              html
+              javascript
+              json
               lua
               nix
-              yaml
               python
-              html
-              json
-              gitignore
-              bash
-              gitcommit
-              git_config
-              diff
+              rust
+              svelte
+              typescript
+              yaml
             ])).dependencies;
 
           tsBundle = pkgs.symlinkJoin {
