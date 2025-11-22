@@ -48,11 +48,30 @@
         ];
       };
     };
+    services.hyprsunset = {
+      enable = true;
+      transitions = {
+        sunrise = {
+          calendar = "*-*-* 06:00:00";
+          requests = [
+            [ "temperature" "6500" ]
+              [ "gamma 100" ]
+          ];
+        };
+        sunset = {
+          calendar = "*-*-* 19:00:00";
+          requests = [
+            [ "temperature" "3500" ]
+          ];
+        };
+      };
+    };
     programs.tofi.enable = true;
     home.packages = [
       pkgs.blueman
       pkgs.xorg.xrdb
       pkgs.hyprshot
+      pkgs.xdg-desktop-portal-gtk
       (pkgs.writeShellScriptBin "toggle-pwvu-control" ''
          pat='pwvucontrol'          
          if pgrep -f "$pat" >/dev/null; then

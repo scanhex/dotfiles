@@ -117,14 +117,28 @@
 
   xdg.portal = {
     enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-    config.common.default = "gtk";
+    xdgOpenUsePortal = true;     
+    extraPortals = [
+      pkgs.xdg-desktop-portal-hyprland
+      pkgs.xdg-desktop-portal-gtk # WARN: this is not enough, need to install the package separately too
+    ];
+
+    config = {
+      common.default = [ "gtk" ];
+
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+        "org.freedesktop.impl.portal.FileChooser"     = [ "gtk" ];
+        "org.freedesktop.impl.portal.Settings"        = [ "gtk" ];
+        "org.freedesktop.impl.portal.OpenURI"         = [ "gtk" ];
+      };
+    };
   };
 
   hm.services.darkman = {
     enable = true;
     settings.lat = 41.9; 
-    settings.lon = -87.6;
+    settings.lng = -87.6;
     darkModeScripts.gtk-theme = ''
       ${pkgs.dconf}/bin/dconf write \
       /org/gnome/desktop/interface/color-scheme "'prefer-dark'"
