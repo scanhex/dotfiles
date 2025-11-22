@@ -141,6 +141,7 @@
   hm.my.obs.enable = true;
   my.lutris.enable = true;
   my.work.enable = true;
+  my.display.software-control.enable = true;
 
   nix.settings = {
       substituters = [ "https://cache.nixos.org" "https://nix-community.cachix.org" "https://cuda-maintainers.cachix.org" ];
