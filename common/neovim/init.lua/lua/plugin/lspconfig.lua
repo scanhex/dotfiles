@@ -33,6 +33,12 @@ return {
             require('lspconfig').nil_ls.setup {
                 capabilities = capabilities
             }
+            require('lspconfig').ts_ls.setup {
+                capabilities = capabilities
+            }
+            require('lspconfig').svelte.setup {
+                capabilities = capabilities
+            }
             require('lspconfig').kotlin_language_server.setup {
                 capabilities = capabilities
             }
