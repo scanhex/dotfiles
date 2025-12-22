@@ -33,6 +33,7 @@ in
       pkgs.unstable.jujutsu
       pkgs.unstable.ruff
       pkgs.unstable.uv
+      pkgs.unstable.zig
       pkgs.yazi
       pythonEnv
       nix-user-chroot-patch

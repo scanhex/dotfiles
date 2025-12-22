@@ -2,7 +2,9 @@
 
 let
   mkHome =
-    { system ? "x86_64-linux"
+    { 
+      username
+    , system ? "x86_64-linux"
     , nixpkgs ? self.inputs.nixpkgs
     , config ? { }
     , overlays ? [ ]
@@ -28,7 +30,9 @@ let
         inputs = self.inputs;
       };
       modules = [
+        ../common/home.nix
         {
+          home.username = username;
           news.display = "silent";
           news.json = lib.mkForce { };
           news.entries = lib.mkForce [ ];
@@ -37,31 +41,30 @@ let
             # set the same option as home-manager in nixos/nix-darwin, to generate the same derivation
             package = pkgs.nix;
             settings = {
-              trusted-users = [ config.my.user ];
+              trusted-users = [ username ];
               use-xdg-base-directories = true;
               experimental-features = [ "nix-command" "flakes" ];
             };
           };
         }
-        ../common/home.nix
       ] ++ modules;
     });
 in
 {
   flake.homeConfigurations = {
     amorozov = mkHome { 
+      username = "amorozov";
       modules = [
       {
-        home.username = "amorozov";
         home.homeDirectory = "/home/amorozov";
       }
       ./home-manager-work.nix
       ];
     };
     alex = mkHome { 
+      username = "alex";
 	    modules = [
 	    {
-		    home.username = "alex";
 		    home.homeDirectory = "/home/alex";
 	    }
       ./home-manager-work.nix
