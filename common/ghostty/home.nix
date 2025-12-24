@@ -26,6 +26,7 @@
               maximize = true;
               scrollback-limit = 64000000;
               app-notifications = "no-clipboard-copy";
+              background-opacity = 0.80;
               command = "${pkgs.bashInteractive}/bin/bash -l";
             };
         };

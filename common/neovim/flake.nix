@@ -138,6 +138,7 @@
 
           luaRc = ''
             lazyPath        = "${lazyPath}"
+            initLuaPath     = "${./init.lua}"
             package.path    = package.path .. ";${./init.lua/lua}/?.lua"
 
             vim.deprecate   = function() end  -- silence warnings
@@ -166,7 +167,8 @@
               },
             })
 
-            vim.cmd.colorscheme("catppuccin")
+            vim.opt.rtp:prepend(initLuaPath)
+            vim.cmd.colorscheme("gruvbox")
           '';
 
           nvimWrapped = pkgs.wrapNeovimUnstable
