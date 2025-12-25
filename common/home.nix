@@ -13,6 +13,7 @@ in
       pkgs.dnsutils
       pkgs.tmux
       pkgs.clang
+      pkgs.llvmPackages.bintools # for stack traces to work
       pkgs.rustc
       pkgs.rustfmt
       pkgs.cargo
