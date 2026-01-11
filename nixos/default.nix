@@ -1,5 +1,6 @@
-{inputs, lib, config, username, ...}:
+{inputs, lib, config, username, pkgs, ...}:
 {
+  fonts.packages = [ pkgs.noto-fonts-cjk-sans ]; # needed for chinese characters
   imports = [
     ./keyboard.nix
     inputs.home-manager.nixosModules.home-manager
