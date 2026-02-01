@@ -21,9 +21,14 @@ return {
                 --                cmd = { os.getenv('HOME') .. "/.nix-profile/bin/clangd", "--offset-encoding=utf-16", "-j=4", "--background-index", "--compile-commands-dir=./build/linux-gnu.release/cmake/" },
                 cmd = { clangd_path, "--offset-encoding=utf-16", "-j=4", "--background-index" },
             }
-            require('lspconfig').pyright.setup {
-                capabilities = capabilities
+            vim.lsp.config.ty = {
+              cmd = { "uvx", "ty", "server" },
+              filetypes = { "python" },
+              root_markers = { "ty.toml", "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git", },
+              capabilities = capabilities,
             }
+            vim.lsp.enable("ty")
+
             --            require('lspconfig').ruff.setup {
             --                capabilities = capabilities
             --            }
