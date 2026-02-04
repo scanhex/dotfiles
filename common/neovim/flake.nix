@@ -44,7 +44,7 @@
             nvim-lspconfig
             nvim-notify
             unstable.vimPlugins.nvim-treesitter.withAllGrammars
-            nvim-treesitter-textobjects
+            unstable.vimPlugins.nvim-treesitter-textobjects
             unstable.vimPlugins.nvim-treesitter-context
             plenary-nvim
             telescope-fzf-native-nvim
@@ -96,7 +96,7 @@
 
           extraTools = with pkgs; [
             ripgrep
-            clang
+            unstable.clang
             pyright
             lua-language-server
             nil
@@ -143,7 +143,7 @@
 
             vim.deprecate   = function() end  -- silence warnings
 
-            clangd_path = "${pkgs.clang-tools_19}/bin/clangd"
+            clangd_path = "${unstable.clang-tools}/bin/clangd"
             codelldb_path   = "${pkgs.vscode-extensions.vadimcn.vscode-lldb}/share/vscode/extensions/vadimcn.vscode-lldb/adapter/codelldb"
             cp_library_nix  = "${cp-library}"
 
@@ -206,7 +206,7 @@
               license = pkgs.lib.licenses.mit;
               platforms = neovim-unwrapped.meta.platforms;
             };
-            paths = [ runner extraEnv lazyPath tsBundle ];
+            paths = [ runner lazyPath tsBundle ];
           } // {
             lua = neovim-unwrapped.lua;
           };
