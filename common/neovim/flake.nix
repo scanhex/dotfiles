@@ -97,7 +97,6 @@
           extraTools = with pkgs; [
             ripgrep
             unstable.clang
-            pyright
             lua-language-server
             nil
             curl # neocmakelsp
