@@ -61,6 +61,28 @@ return {
                 end
             end
 
+            local augroup = vim.api.nvim_create_augroup("TSAutoStart", { clear = true })
+            local ts_start = function(buf)
+                if not vim.api.nvim_buf_is_loaded(buf) then
+                    return
+                end
+                if vim.bo[buf].buftype ~= "" then
+                    return
+                end
+                pcall(vim.treesitter.start, buf)
+            end
+
+            vim.api.nvim_create_autocmd("FileType", {
+                group = augroup,
+                callback = function(args)
+                    ts_start(args.buf)
+                end,
+            })
+
+            for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                ts_start(buf)
+            end
+
             require("nvim-treesitter-textobjects")
         end
     }
