@@ -16,7 +16,7 @@
   hm.my.wezterm.enable = true;
   hm.my.wezterm.tmux-binds = false;
   #hm.my.zed.enable = true; zed has issues with immutability. also want the latest version.
-  hm.home.packages = [ pkgs.slack pkgs.tailscale ];
+  hm.home.packages = [ pkgs.slack ];
 
   # For `flakes/darwin-vm.nix`
   # nix.linux-builder.enable = true;

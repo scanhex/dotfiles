@@ -13,7 +13,6 @@
   ] ++ lib.my.getModules [ ./. ];
 
   hm.imports = [ ./home.nix ];
-  services.tailscale.enable = true;
 
   security.sudo.extraConfig = ''
      ${config.my.user} ALL=(ALL) NOPASSWD: ALL

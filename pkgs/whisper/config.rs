@@ -68,7 +68,7 @@ impl Service {
 
 impl Default for Service {
     fn default() -> Self {
-        Service::OpenAI // Default to OpenAI
+        Service::ElevenLabs
     }
 }
 

@@ -20,7 +20,7 @@ const REPLICATE_POLL_TIMEOUT: Duration = Duration::from_secs(120);
 
 // ElevenLabs constants
 const ELEVENLABS_API_URL: &str = "https://api.elevenlabs.io/v1/speech-to-text";
-const ELEVENLABS_MODEL: &str = "scribe_v1"; // Or allow configuration
+const ELEVENLABS_MODEL: &str = "scribe_v2";
 
 // OpenAI constants
 const OPENAI_API_URL: &str = "https://api.openai.com/v1/audio/transcriptions";
