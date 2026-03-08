@@ -91,11 +91,17 @@
       PermitRootLogin = "yes";
     };
   };
+  services.mullvad-vpn.enable = true;
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [ 22 ];
   };
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    # Prevent tailscaled from replacing system DNS (100.100.100.100),
+    # which conflicts with Mullvad-managed DNS.
+    extraSetFlags = [ "--accept-dns=false" ];
+  };
 
   programs.nix-ld  = {
     enable = true;
