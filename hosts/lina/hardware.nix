@@ -72,6 +72,9 @@
       #passthrough
       "amd_iommu=on" # todo try =pt if =on works
       "iommu=on" 
+      # Reserve 4 GiB of 2 MiB hugetlb pages for DPDK.
+      "hugepagesz=2M"
+      "hugepages=2048"
   ];
   users.users.${config.my.user}.extraGroups = [ "libvirtd" "qemu-libvirtd" ];
 }

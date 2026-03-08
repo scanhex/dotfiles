@@ -35,6 +35,7 @@
       clinfo
       bibata-cursors
       osu-lazer-bin
+      awscli2
       # emacs29-pgtk
     ];
   };
