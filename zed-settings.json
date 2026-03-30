@@ -1,0 +1,73 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "agent_servers": {
+    "codex-acp": {
+      "type": "registry",
+      "default_config_options": {
+        "reasoning_effort": "high",
+      },
+      "favorite_config_option_values": {
+        "reasoning_effort": ["high", "xhigh", "medium"],
+        "model": ["gpt-5.3-codex-spark", "gpt-5.4"],
+      },
+    },
+  },
+  "edit_predictions": {
+    "provider": "zed",
+  },
+  "agent": {
+    "tool_permissions": {
+      "default": "allow",
+    },
+    "inline_assistant_model": {
+      "provider": "copilot_chat",
+      "model": "claude-opus-4.6",
+    },
+    "default_profile": "write",
+    "model_parameters": [],
+    "default_model": {
+      "provider": "openrouter",
+      "model": "anthropic/claude-opus-4.6",
+    },
+  },
+  "terminal": {
+    "option_as_meta": true, // make alt-d and others work
+    "font_family": "Iosevka Nerd Font Mono",
+    "copy_on_select": true,
+  },
+  "tab_size": 2,
+  "ui_font_size": 16,
+  "buffer_font_size": 16,
+  "ui_font_family": "Iosevka Nerd Font Mono",
+  "buffer_font_family": "Iosevka Nerd Font Mono",
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "JetBrains New Dark",
+  },
+  // "icon_theme": "Catppuccin Macchiato",
+  "vim_mode": true,
+  "vim": {
+    "use_system_clipboard": "never",
+  },
+  "dap": {
+    "GDB": {
+      "binary": "gdb",
+    },
+  },
+  "languages": {
+    "C++": {
+      "format_on_save": "on",
+    },
+    "Python": {
+      "format_on_save": "off",
+    },
+  },
+}
