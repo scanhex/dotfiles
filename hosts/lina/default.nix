@@ -110,6 +110,8 @@
     libraries = config.hardware.graphics.extraPackages;
   };
   my.steam.enable = true;
+  my.steelseries.enable = true;
+  my.steelseries.aerox5.brightness = 17;
 
   programs.zsh.enable = true;
 
