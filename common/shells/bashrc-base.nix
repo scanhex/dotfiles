@@ -31,11 +31,5 @@ zellij_tab_name_update() {
     fi
 }
 
-if [ -d "${config.home.profileDirectory}/share/bash-completion/completions" ]; then
-  for completion_script in ${config.home.profileDirectory}/share/bash-completion/completions/*
-  do
-    source "$completion_script"
-  done
-fi
     '';
 }
