@@ -30,6 +30,7 @@
   home-manager.users.${username} = {
     home.packages = with pkgs; [
       nixd
+      bubblewrap
       nix-bash-completions
       micromamba
       clinfo
