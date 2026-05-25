@@ -19,6 +19,8 @@ in
       pkgs.cargo
       pkgs.gnumake
       pkgs.cmake
+      pkgs.htop
+      pkgs.jq
       pkgs.ninja
       pkgs.unstable.llvmPackages_21.clang-tools
       pkgs.nushell
