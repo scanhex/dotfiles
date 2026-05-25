@@ -1,10 +1,10 @@
 # Whisper Dictation
 
-A lightweight dictation application using OpenAI's Whisper API for speech-to-text conversion with global hotkey support.
+A lightweight dictation application using speech-to-text APIs with global hotkey support.
 
 ## Features
 
-- Real-time dictation using OpenAI's Whisper API
+- Live OpenAI Realtime transcription with final output after recording stops
 - Global hotkey support (toggle recording with a keyboard shortcut)
   - Cross-compositor support (X11 and Wayland)
 - Multiple output options:
@@ -75,4 +75,4 @@ MIT
 
 ## Notes
 
-This application requires an internet connection as it uses the OpenAI API for speech recognition.
+This application requires an internet connection as it uses external APIs for speech recognition. The OpenAI provider streams audio through Realtime transcription and only applies the configured clipboard, paste, file, or stdout output after recording stops.

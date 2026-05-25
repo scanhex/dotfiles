@@ -6,9 +6,11 @@ use log::{debug, info, warn};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use tokio::sync::mpsc;
 
 pub const MAX_SAMPLE_RATE: u32 = 44100;
 pub const MAX_CHANNELS: u16 = 2;
+pub type AudioChunkSender = mpsc::UnboundedSender<Vec<f32>>;
 
 pub struct AudioRecorder {
     // Store frames in an Arc<Mutex> to allow access from audio callback thread
@@ -39,10 +41,13 @@ impl AudioRecorder {
         })
     }
 
-    pub fn start(&mut self) -> Result<()> {
+    pub fn start(&mut self, chunk_sender: Option<AudioChunkSender>) -> Result<StreamConfig> {
         if self.is_recording() {
             warn!("Recording already in progress.");
-            return Ok(());
+            return self
+                .stream_config
+                .clone()
+                .ok_or_else(|| anyhow!("Recording is active but no stream config is available"));
         }
 
         // Clear previous frames
@@ -125,19 +130,22 @@ impl AudioRecorder {
                 let space_left = max_frames - frame_buffer.len();
                 let elements_to_add = std::cmp::min(data.len(), space_left);
                 frame_buffer.extend_from_slice(&data[..elements_to_add]);
+                if let Some(tx) = chunk_sender.as_ref() {
+                    let _ = tx.send(data[..elements_to_add].to_vec());
+                }
             },
             err_fn,
             None, // Timeout - None means block indefinitely
         )?;
 
-        self.stream_config = Some(config);
+        self.stream_config = Some(config.clone());
 
         stream.play()?;
         self.stream = Some(stream);
         *self.is_recording_flag.lock().expect("Mutex poisoned") = true;
         info!("Audio recording started.");
 
-        Ok(())
+        Ok(config)
     }
 
     pub fn stop(&mut self) -> Result<Option<(StreamConfig, Vec<f32>)>> {
@@ -157,9 +165,11 @@ impl AudioRecorder {
         if frames.is_empty() {
             Ok(None)
         } else if self.stream_config.is_none() {
-            Err(anyhow!("No stream config - start() was supposed to fill it"))
+            Err(anyhow!(
+                "No stream config - start() was supposed to fill it"
+            ))
         } else {
-            Ok(Some((self.stream_config.clone().unwrap(), frames.clone()))) 
+            Ok(Some((self.stream_config.clone().unwrap(), frames.clone())))
         }
     }
 

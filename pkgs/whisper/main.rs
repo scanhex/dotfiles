@@ -136,6 +136,9 @@ async fn main() -> Result<()> {
         info!("Stdin listener task finished.");
     });
 
+    let mut openai_audio_tx: Option<mpsc::UnboundedSender<Vec<f32>>> = None;
+    let mut openai_realtime_task: Option<tokio::task::JoinHandle<anyhow::Result<String>>> = None;
+
     while IS_RUNNING.load(Ordering::Relaxed) {
         tokio::select! {
             _ = tokio::time::sleep(Duration::from_millis(50)) => {
@@ -143,38 +146,82 @@ async fn main() -> Result<()> {
             Some(event) = hotkey_rx.recv() => {
                 match event {
                     hotkey::HotkeyEvent::ToggleRecording => {
-                        let mut state = app_state.lock().await; // Lock the state
-                        let currently_recording = state.is_recording;
-                         state.is_recording = !currently_recording;
-                         let should_be_recording = state.is_recording;
-                         // Unlock happens automatically when `state` goes out of scope
+                        let should_be_recording = {
+                            let mut state = app_state.lock().await;
+                            let currently_recording = state.is_recording;
+                            state.is_recording = !currently_recording;
+                            state.is_recording
+                        };
 
                         if should_be_recording {
                             info!(">>> Starting recording... <<<");
-                            recorder.start().unwrap();
-                        } else {
-                             info!(">>> Stopping recording and processing... <<<");
-                            match recorder.stop() {
-                                Ok(Some((stream_config, audio_data))) => {
-                                    info!("Recording stopped. Got {} samples.", audio_data.len());
-                                     // Process in background task not to block main loop
-                                     let task_config = config.clone();
-                                     let task_cache_dir = cache_dir.clone();
-                                     tokio::spawn(async move {
-                                         process_recorded_audio(task_config, task_cache_dir, stream_config, audio_data).await;
-                                     });
-                                }
-                                Ok(None) => {
-                                     warn!("Recording stopped but no audio data captured.");
+                            let chunk_sender = if config.service == Service::OpenAI {
+                                let (audio_tx, audio_rx) = mpsc::unbounded_channel();
+                                openai_audio_tx = Some(audio_tx.clone());
+                                Some((audio_tx, audio_rx))
+                            } else {
+                                None
+                            };
+
+                            match recorder.start(chunk_sender.as_ref().map(|(tx, _)| tx.clone())) {
+                                Ok(stream_config) => {
+                                    if let Some((_, audio_rx)) = chunk_sender {
+                                        let task_config = config.clone();
+                                        openai_realtime_task = Some(tokio::spawn(async move {
+                                            api::transcribe_openai_realtime(
+                                                task_config,
+                                                audio_rx,
+                                                stream_config.sample_rate.0,
+                                                stream_config.channels,
+                                            )
+                                            .await
+                                        }));
+                                    }
                                 }
                                 Err(e) => {
-                                     error!("Error stopping recording: {}", e);
+                                    error!("Failed to start recording: {}", e);
+                                    openai_audio_tx = None;
+                                    app_state.lock().await.is_recording = false;
                                 }
-                             }
-                         }
-                     }
-                 }
-             }
+                            }
+                        } else {
+                            info!(">>> Stopping recording and processing... <<<");
+                            let stop_result = recorder.stop();
+
+                            // Close the realtime channel (no-op for non-OpenAI) so the
+                            // task can finalize whatever it received, then hand it off.
+                            drop(openai_audio_tx.take());
+                            if let Some(task) = openai_realtime_task.take() {
+                                let task_config = config.clone();
+                                tokio::spawn(async move {
+                                    process_openai_realtime_result(task_config, task).await;
+                                });
+                            }
+
+                            match stop_result {
+                                Ok(Some((stream_config, audio_data))) => {
+                                    info!("Recording stopped. Got {} samples.", audio_data.len());
+                                    if config.service != Service::OpenAI {
+                                        let task_config = config.clone();
+                                        let task_cache_dir = cache_dir.clone();
+                                        tokio::spawn(async move {
+                                            process_recorded_audio(
+                                                task_config,
+                                                task_cache_dir,
+                                                stream_config,
+                                                audio_data,
+                                            )
+                                            .await;
+                                        });
+                                    }
+                                }
+                                Ok(None) => warn!("Recording stopped but no audio data captured."),
+                                Err(e) => error!("Error stopping recording: {}", e),
+                            }
+                        }
+                    }
+                }
+            }
         }
     } // End main loop
 
@@ -191,6 +238,32 @@ async fn main() -> Result<()> {
 
     info!("Whisper Dictation finished.");
     exit(0);
+}
+
+async fn process_openai_realtime_result(
+    config: Arc<Config>,
+    task: tokio::task::JoinHandle<Result<String>>,
+) {
+    let result = task.await;
+    println!();
+
+    match result {
+        Ok(Ok(text)) => {
+            if !text.is_empty() {
+                if let Err(e) = output::process_output(&config, text.as_str()).await {
+                    error!("Failed to process output: {}", e);
+                }
+            } else {
+                warn!("OpenAI Realtime returned an empty transcription.");
+            }
+        }
+        Ok(Err(e)) => {
+            error!("OpenAI Realtime transcription failed: {}", e);
+        }
+        Err(e) => {
+            error!("OpenAI Realtime transcription task failed: {}", e);
+        }
+    }
 }
 
 // Function to handle processing audio data (can be spawned as a task)

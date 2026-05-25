@@ -1,14 +1,20 @@
 use crate::config::Config;
 use anyhow::{anyhow, Context, Result};
 use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
+use futures_util::{SinkExt, StreamExt};
 use log::{debug, info, warn};
 use reqwest::{multipart, Body, Client, StatusCode};
 use serde::{Deserialize, Serialize};
-use serde_json::Value; // For handling flexible JSON structures
+use serde_json::{json, Value}; // For handling flexible JSON structures
+use std::io::{self, Write};
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::fs::File;
+use tokio::sync::mpsc;
 use tokio::time::sleep;
+use tokio_tungstenite::connect_async;
+use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message};
 use tokio_util::codec::{BytesCodec, FramedRead};
 
 // Replicate constants
@@ -25,6 +31,13 @@ const ELEVENLABS_MODEL: &str = "scribe_v2";
 // OpenAI constants
 const OPENAI_API_URL: &str = "https://api.openai.com/v1/audio/transcriptions";
 const OPENAI_MODEL: &str = "gpt-4o-transcribe";
+const OPENAI_REALTIME_WS_URL: &str = "wss://api.openai.com/v1/realtime?intent=transcription";
+const OPENAI_REALTIME_TRANSCRIPTION_MODEL: &str = "gpt-realtime-whisper";
+const OPENAI_REALTIME_SAMPLE_RATE: u32 = 24_000;
+const OPENAI_REALTIME_COMMIT_INTERVAL: Duration = Duration::from_millis(1_500);
+// 100ms — OpenAI rejects commits with less audio than this as a fatal error event.
+const OPENAI_REALTIME_MIN_COMMIT_SAMPLES: usize = (OPENAI_REALTIME_SAMPLE_RATE as usize) / 10;
+const OPENAI_REALTIME_FINAL_TIMEOUT: Duration = Duration::from_secs(12);
 
 // --- Replicate ---
 
@@ -357,6 +370,309 @@ pub async fn transcribe_elevenlabs(config: &Config, audio_path: &Path) -> Result
 #[derive(Deserialize, Debug)]
 struct OpenAIResponse {
     text: String,
+}
+
+struct RealtimePcmEncoder {
+    input_sample_rate: u32,
+    input_channels: usize,
+    pending_mono: Vec<f32>,
+    next_source_pos: f64,
+}
+
+impl RealtimePcmEncoder {
+    fn new(input_sample_rate: u32, input_channels: u16) -> Self {
+        Self {
+            input_sample_rate,
+            input_channels: input_channels.max(1) as usize,
+            pending_mono: Vec::new(),
+            next_source_pos: 0.0,
+        }
+    }
+
+    fn push_f32(&mut self, input: &[f32]) -> Vec<i16> {
+        if input.is_empty() {
+            return Vec::new();
+        }
+
+        let frames = input.len() / self.input_channels;
+        self.pending_mono.reserve(frames);
+        for frame in 0..frames {
+            let start = frame * self.input_channels;
+            let sum: f32 = input[start..start + self.input_channels].iter().sum();
+            self.pending_mono.push(sum / self.input_channels as f32);
+        }
+
+        self.drain_available(false)
+    }
+
+    fn finish(&mut self) -> Vec<i16> {
+        self.drain_available(true)
+    }
+
+    fn drain_available(&mut self, flush: bool) -> Vec<i16> {
+        if self.pending_mono.is_empty() {
+            return Vec::new();
+        }
+
+        let step = self.input_sample_rate as f64 / OPENAI_REALTIME_SAMPLE_RATE as f64;
+        let mut output = Vec::new();
+
+        while self.next_source_pos + 1.0 < self.pending_mono.len() as f64
+            || (flush && self.next_source_pos < self.pending_mono.len() as f64)
+        {
+            let idx = self.next_source_pos.floor() as usize;
+            let frac = self.next_source_pos - idx as f64;
+            let current = self.pending_mono[idx];
+            let next = self.pending_mono.get(idx + 1).copied().unwrap_or(current);
+            let sample = current + (next - current) * frac as f32;
+            output.push(f32_to_i16(sample));
+            self.next_source_pos += step;
+        }
+
+        let consumed = self.next_source_pos.floor() as usize;
+        if consumed > 0 {
+            let drain_to = consumed.min(self.pending_mono.len());
+            self.pending_mono.drain(0..drain_to);
+            self.next_source_pos -= drain_to as f64;
+        }
+
+        if flush {
+            self.pending_mono.clear();
+            self.next_source_pos = 0.0;
+        }
+
+        output
+    }
+}
+
+fn f32_to_i16(sample: f32) -> i16 {
+    (sample * 32767.0).clamp(-32768.0, 32767.0) as i16
+}
+
+type WsWrite = futures_util::stream::SplitSink<
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+    Message,
+>;
+
+async fn send_realtime_event(write: &mut WsWrite, event: Value) -> Result<()> {
+    write
+        .send(Message::Text(event.to_string().into()))
+        .await
+        .context("Failed to send OpenAI Realtime event")
+}
+
+async fn append_realtime_audio(write: &mut WsWrite, pcm_samples: &[i16]) -> Result<()> {
+    if pcm_samples.is_empty() {
+        return Ok(());
+    }
+    let mut pcm_bytes = Vec::with_capacity(pcm_samples.len() * 2);
+    for sample in pcm_samples {
+        pcm_bytes.extend_from_slice(&sample.to_le_bytes());
+    }
+    send_realtime_event(
+        write,
+        json!({
+            "type": "input_audio_buffer.append",
+            "audio": BASE64_STANDARD.encode(pcm_bytes),
+        }),
+    )
+    .await
+}
+
+async fn commit_realtime_audio(write: &mut WsWrite) -> Result<()> {
+    send_realtime_event(write, json!({ "type": "input_audio_buffer.commit" })).await
+}
+
+/// Processes one WebSocket message; returns true iff it was a completion event.
+fn handle_realtime_message(
+    message: Message,
+    live_text: &mut String,
+    final_parts: &mut Vec<String>,
+) -> Result<bool> {
+    let text = match message {
+        Message::Text(text) => text,
+        Message::Close(frame) => {
+            debug!("OpenAI Realtime WebSocket closed: {:?}", frame);
+            return Ok(false);
+        }
+        _ => return Ok(false),
+    };
+    let event: Value = serde_json::from_str(text.as_ref())
+        .with_context(|| format!("Failed to parse OpenAI Realtime event: {}", text))?;
+    match event.get("type").and_then(Value::as_str).unwrap_or_default() {
+        "conversation.item.input_audio_transcription.delta" => {
+            if let Some(delta) = event.get("delta").and_then(Value::as_str) {
+                print!("{}", delta);
+                io::stdout().flush().ok();
+                live_text.push_str(delta);
+            }
+            Ok(false)
+        }
+        "conversation.item.input_audio_transcription.completed" => {
+            let transcript = event
+                .get("transcript")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .trim();
+            if !transcript.is_empty() {
+                final_parts.push(transcript.to_string());
+            }
+            Ok(true)
+        }
+        "error" => {
+            let msg = event
+                .pointer("/error/message")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown OpenAI Realtime error");
+            Err(anyhow!("OpenAI Realtime error: {}", msg))
+        }
+        event_type => {
+            debug!("OpenAI Realtime event: {}", event_type);
+            Ok(false)
+        }
+    }
+}
+
+pub async fn transcribe_openai_realtime(
+    config: Arc<Config>,
+    mut audio_rx: mpsc::UnboundedReceiver<Vec<f32>>,
+    input_sample_rate: u32,
+    input_channels: u16,
+) -> Result<String> {
+    if config.api_key.is_empty() {
+        return Err(anyhow!(
+            "OpenAI API key is missing. Please provide it via --api-key or OPENAI_API_KEY env var."
+        ));
+    }
+
+    let mut request = OPENAI_REALTIME_WS_URL
+        .into_client_request()
+        .context("Failed to build OpenAI Realtime WebSocket request")?;
+    request.headers_mut().insert(
+        "Authorization",
+        format!("Bearer {}", config.api_key)
+            .parse()
+            .context("Failed to build OpenAI authorization header")?,
+    );
+
+    let (ws_stream, _) = connect_async(request)
+        .await
+        .context("Failed to connect to OpenAI Realtime API")?;
+    let (mut write, mut read) = ws_stream.split();
+
+    send_realtime_event(
+        &mut write,
+        json!({
+            "type": "session.update",
+            "session": {
+                "type": "transcription",
+                "audio": {
+                    "input": {
+                        "format": {
+                            "type": "audio/pcm",
+                            "rate": OPENAI_REALTIME_SAMPLE_RATE
+                        },
+                        "transcription": {
+                            "model": OPENAI_REALTIME_TRANSCRIPTION_MODEL,
+                            "language": "en",
+                            "delay": "low"
+                        },
+                        "turn_detection": null
+                    }
+                }
+            }
+        }),
+    )
+    .await?;
+
+    info!(
+        "OpenAI Realtime transcription connected (transcription model: {}, input: {}Hz {}ch -> {}Hz mono PCM16).",
+        OPENAI_REALTIME_TRANSCRIPTION_MODEL,
+        input_sample_rate,
+        input_channels,
+        OPENAI_REALTIME_SAMPLE_RATE
+    );
+
+    let mut encoder = RealtimePcmEncoder::new(input_sample_rate, input_channels);
+    let mut commit_interval = tokio::time::interval(OPENAI_REALTIME_COMMIT_INTERVAL);
+    commit_interval.tick().await; // discard the immediate first tick
+    let mut pending_samples = 0usize;
+    let mut commits_sent = 0usize;
+    let mut completions_seen = 0usize;
+    let mut live_text = String::new();
+    let mut final_parts: Vec<String> = Vec::new();
+
+    // Streaming phase: pump audio in and drain events out until the recorder
+    // closes the audio channel.
+    loop {
+        tokio::select! {
+            chunk = audio_rx.recv() => {
+                let Some(chunk) = chunk else { break };
+                let pcm = encoder.push_f32(&chunk);
+                if !pcm.is_empty() {
+                    append_realtime_audio(&mut write, &pcm).await?;
+                    pending_samples += pcm.len();
+                }
+            }
+            _ = commit_interval.tick() => {
+                if pending_samples >= OPENAI_REALTIME_MIN_COMMIT_SAMPLES {
+                    commit_realtime_audio(&mut write).await?;
+                    commits_sent += 1;
+                    pending_samples = 0;
+                }
+            }
+            maybe_message = read.next() => {
+                let Some(message) = maybe_message else { break };
+                let message = message.context("OpenAI Realtime WebSocket read failed")?;
+                if handle_realtime_message(message, &mut live_text, &mut final_parts)? {
+                    completions_seen += 1;
+                }
+            }
+        }
+    }
+
+    // Flush trailing samples. Skip the commit if the tail is shorter than
+    // OpenAI's minimum — a sub-100ms commit returns a fatal error event that
+    // would otherwise discard the entire transcript.
+    let tail = encoder.finish();
+    if !tail.is_empty() {
+        append_realtime_audio(&mut write, &tail).await?;
+        pending_samples += tail.len();
+    }
+    if pending_samples >= OPENAI_REALTIME_MIN_COMMIT_SAMPLES {
+        commit_realtime_audio(&mut write).await?;
+        commits_sent += 1;
+    }
+
+    // Finalization phase: wait for any in-flight completions, bounded by one
+    // absolute deadline (pinned, so it doesn't reset on each event).
+    let deadline = sleep(OPENAI_REALTIME_FINAL_TIMEOUT);
+    tokio::pin!(deadline);
+    while completions_seen < commits_sent {
+        tokio::select! {
+            _ = &mut deadline => {
+                warn!(
+                    "Timed out waiting for OpenAI Realtime final transcription events ({} of {} received).",
+                    completions_seen, commits_sent
+                );
+                break;
+            }
+            maybe_message = read.next() => {
+                let Some(message) = maybe_message else { break };
+                let message = message.context("OpenAI Realtime WebSocket read failed")?;
+                if handle_realtime_message(message, &mut live_text, &mut final_parts)? {
+                    completions_seen += 1;
+                }
+            }
+        }
+    }
+
+    let final_text = if final_parts.is_empty() {
+        live_text
+    } else {
+        final_parts.join(" ")
+    };
+    Ok(final_text.trim().to_string())
 }
 
 pub async fn transcribe_openai(config: &Config, audio_path: &Path) -> Result<String> {
