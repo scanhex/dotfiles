@@ -24,25 +24,25 @@ let
       );
     in
     nixpkgs.lib.nixosSystem {
-      inherit system;
       specialArgs = {
         inherit lib username;
         inputs = self.inputs;
-        pkgs = customPkgs;
       };
       modules = [
-				self.inputs.home-manager.nixosModules.home-manager
+        nixpkgs.nixosModules.readOnlyPkgs
+        self.inputs.home-manager.nixosModules.home-manager
         ../common
         ../nixos
-				{
-					home-manager = {
-						useGlobalPkgs = true;
-						useUserPackages = true;
-						backupFileExtension = "hm_bak~";
-						extraSpecialArgs = {
-							inputs = self.inputs;
-						};
-					};
+        {
+          nixpkgs.pkgs = customPkgs;
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            backupFileExtension = "hm_bak~";
+            extraSpecialArgs = {
+              inputs = self.inputs;
+            };
+          };
           nix = {
             enable = true;
             # set the same option as home-manager in nixos/nix-darwin, to generate the same derivation
@@ -53,9 +53,9 @@ let
               experimental-features = [ "nix-command" "flakes" ];
             };
           };
-				}
-			] 
-            ++ modules;
+        }
+      ]
+      ++ modules;
     });
 in
 {
@@ -63,10 +63,6 @@ in
     wsl = mkNixos {
       username = "nixos";
       hostname = "nixos";
-      overlays = [
-          self.overlays.default
-      ];
-
       modules = [ 
                 ../hosts/wsl
                 self.inputs.nixos-wsl.nixosModules.wsl
@@ -82,6 +78,9 @@ in
     lina = mkNixos {
       username = "alex";
       hostname = "lina";
+      config = {
+        cudaSupport = true;
+      };
       modules = [ 
                 ../hosts/lina
                 ];

@@ -29,21 +29,21 @@ withSystem system ({ lib, pkgs, system, ... }:
     specialArgs = {
       inherit lib username;
       inputs = self.inputs;
-      pkgs = customPkgs;
     };
     modules = [
       ../darwin
-  				{
-   					home-manager = {
-    						useGlobalPkgs = true;
-    						useUserPackages = true;
-    						backupFileExtension = "hm_bak~";
-    						extraSpecialArgs = {
-     							inputs = self.inputs;
-    						};
-   					};
-  				}
- 			]
+      {
+        nixpkgs.pkgs = customPkgs;
+        home-manager = {
+          useGlobalPkgs = true;
+          useUserPackages = true;
+          backupFileExtension = "hm_bak~";
+          extraSpecialArgs = {
+            inputs = self.inputs;
+          };
+        };
+      }
+    ]
     ++ modules;
   });
 in

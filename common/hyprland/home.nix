@@ -1,10 +1,13 @@
 {config, pkgs, lib, ...}:
+let
+  settings = import ./settings.nix { inherit lib; };
+in
 {
   options.my.hyprland.enable = lib.mkEnableOption "hyprland";
-  options.my.hyprland.extraConfig = lib.mkOption {
-    default = "";
-    type = lib.types.lines;
-    description = "Extra configuration for hyprland";
+  options.my.hyprland.extraSettings = lib.mkOption {
+    default = [ ];
+    type = lib.types.listOf lib.types.attrs;
+    description = "Extra Hyprland Lua settings fragments.";
   };
 
   imports = [ ./bluetooth.nix ];
@@ -12,8 +15,8 @@
   config = lib.mkIf config.my.hyprland.enable {
     wayland.windowManager.hyprland = {
       enable = true;
-      extraConfig = 
-      lib.concatStringsSep "\n" [ (lib.readFile ./hyprland.conf) config.my.hyprland.extraConfig ];
+      configType = "lua";
+      settings = lib.mkMerge ([ settings ] ++ config.my.hyprland.extraSettings);
     };
     programs.hyprlock = {
       enable = true;
@@ -50,26 +53,24 @@
     };
     services.hyprsunset = {
       enable = true;
-      transitions = {
-        sunrise = {
-          calendar = "*-*-* 06:00:00";
-          requests = [
-            [ "temperature" "6500" ]
-              [ "gamma 100" ]
-          ];
-        };
-        sunset = {
-          calendar = "*-*-* 19:00:00";
-          requests = [
-            [ "temperature" "3500" ]
-          ];
-        };
+      settings = {
+        profile = [
+          {
+            time = "06:00";
+            temperature = 6500;
+            gamma = 100;
+          }
+          {
+            time = "19:00";
+            temperature = 3500;
+          }
+        ];
       };
     };
     programs.tofi.enable = true;
     home.packages = [
       pkgs.blueman
-      pkgs.xorg.xrdb
+      pkgs.xrdb
       pkgs.hyprshot
       pkgs.xdg-desktop-portal-gtk
       (pkgs.writeShellScriptBin "toggle-pwvu-control" ''
@@ -86,6 +87,23 @@
         else
           GDK_DPI_SCALE=0.75 blueman-manager & disown
         fi
+      '')
+      (pkgs.writeShellScriptBin "reconnect-wh1000xm6" ''
+        d=80:99:E7:D4:1C:BC
+        u=''${d//:/_}
+        bluetoothctl disconnect "$d"
+        sleep 0.1
+        bluetoothctl --timeout 10 connect "$d" || {
+          bluetoothctl power off
+          sleep 0.1
+          bluetoothctl power on
+          sleep 0.1
+          bluetoothctl --timeout 12 connect "$d"
+        }
+        CARD="bluez_card.$u"
+        pactl set-card-profile "$CARD" a2dp-sink || true
+        s=$(pactl list short sinks | awk -v id="$u" '$2 ~ ("bluez_output." id){print $2}' | head -n1)
+        [ -n "$s" ] && pactl set-default-sink "$s" && pactl list short sink-inputs | awk '{print $1}' | xargs -r -I{} pactl move-sink-input {} "$s"
       '')
     ];
     services.dunst.enable = true;

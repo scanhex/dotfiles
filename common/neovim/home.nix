@@ -4,7 +4,7 @@
   };
   config.home = lib.mkIf config.my.neovim.enable {
     packages = [
-      inputs.scanhex-neovim.packages.${pkgs.system}.default
+      inputs.scanhex-neovim.packages.${pkgs.stdenv.hostPlatform.system}.default
     ];
     sessionVariables = {
       EDITOR = "nvim";

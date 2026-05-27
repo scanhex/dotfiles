@@ -51,7 +51,7 @@
 
   programs.nix-ld  = {
     enable = true;
-    package = pkgs.nix-ld-rs;
+    package = pkgs.nix-ld;
     libraries = config.hardware.graphics.extraPackages;
   };
   hardware.graphics.enable = true;

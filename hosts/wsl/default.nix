@@ -1,4 +1,4 @@
-{ pkgs, username, config, ... }:
+{ lib, pkgs, username, config, ... }:
 {
   home-manager.users.${username} = {
     home.packages = with pkgs; [
@@ -17,7 +17,7 @@
 
   programs.nix-ld  = {
     enable = true;
-    package = pkgs.nix-ld-rs;
+    package = pkgs.nix-ld;
     libraries = config.hardware.graphics.extraPackages;
   };
   hardware.graphics.enable = true;
@@ -35,10 +35,11 @@
     enable = true;
     defaultUser = "${username}";
     startMenuLaunchers = true;
-    nativeSystemd = true;
     interop.includePath = false;
     useWindowsDriver = true;
   };
+
+  networking.resolvconf.enable = false;
 
   services.openssh = { 
       enable = true;
@@ -48,7 +49,10 @@
   };
 
   programs.zsh.enable = true;
-  users.users.${username}.shell = pkgs.bash;
+  users.users.${username} = {
+    group = "users";
+    shell = pkgs.bash;
+  };
 
   virtualisation.docker.enable = true;
 

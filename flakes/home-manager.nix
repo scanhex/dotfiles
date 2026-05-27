@@ -1,4 +1,4 @@
-{ self, lib, withSystem, ... }:
+{ self, inputs, lib, withSystem, ... }:
 
 let
   mkHome =
@@ -15,7 +15,7 @@ let
       customPkgs = import nixpkgs (lib.recursiveUpdate
         {
           inherit system;
-          overlays = [ self.overlays.default ] ++ overlays;
+          overlays = (import ../overlays { inherit inputs system; }) ++ overlays;
           config.allowUnfree = true;
         }
         {

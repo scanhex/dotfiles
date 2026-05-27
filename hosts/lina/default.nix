@@ -9,13 +9,13 @@
   environment.gnome.excludePackages = with pkgs; [ seahorse ];
   services.xserver = {
       enable = true;
-      displayManager.gdm.enable = true;
       displayManager.startx.enable = true;
 #      desktopManager.xfce.enable = true;
       desktopManager.xterm.enable = true;
 #      desktopManager.cinnamon.enable = true;
-      desktopManager.gnome.enable = true;
   };
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
   services.displayManager.defaultSession = "hyprland";
 #  services.displayManager.sddm = { 
 #    enable = true;
@@ -68,12 +68,12 @@
 	  shell = pkgs.bash;
 	  packages = with pkgs; [
 		  google-chrome
-		  firefox
+		  firefox-bin
       unstable.discord-canary
       telegram-desktop
       zotero
       obsidian
-      jetbrains.idea-community-bin
+      jetbrains.idea-oss
       kotlin-language-server
 	  ];
   };
@@ -107,7 +107,7 @@
 
   programs.nix-ld  = {
     enable = true;
-    package = pkgs.nix-ld-rs;
+    package = pkgs.nix-ld;
     libraries = config.hardware.graphics.extraPackages;
   };
   my.steam.enable = true;
@@ -170,8 +170,6 @@
               "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
             ];
   };
-  nixpkgs.config.cudaSupport = true;
-
   environment.systemPackages = with pkgs; [
     binutils
     tree

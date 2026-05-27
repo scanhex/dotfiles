@@ -8,10 +8,32 @@ with lib;
     hardware.i2c.enable = true; 
     hm = {
       home.packages = [ pkgs.ddcutil ];
-      my.hyprland.extraConfig = "
-        bindel = , XF86MonBrightnessUp,   exec, ddcutil -d 1 setvcp 10 + 10
-        bindel = , XF86MonBrightnessDown, exec, ddcutil -d 1 setvcp 10 - 10
-        ";
+      my.hyprland.extraSettings = [
+        {
+          bind = [
+            {
+              _args = [
+                "XF86MonBrightnessUp"
+                (lib.generators.mkLuaInline ''hl.dsp.exec_cmd("ddcutil -d 1 setvcp 10 + 10")'')
+                {
+                  locked = true;
+                  repeating = true;
+                }
+              ];
+            }
+            {
+              _args = [
+                "XF86MonBrightnessDown"
+                (lib.generators.mkLuaInline ''hl.dsp.exec_cmd("ddcutil -d 1 setvcp 10 - 10")'')
+                {
+                  locked = true;
+                  repeating = true;
+                }
+              ];
+            }
+          ];
+        }
+      ];
     };
   };
 }

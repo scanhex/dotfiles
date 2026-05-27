@@ -2,7 +2,7 @@
   description = "scanhex's portable Neovim + Lazy setup";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/release-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     cp-library = {
@@ -93,6 +93,7 @@
             rustaceanvim
             refactoring-nvim
             nvim-dap
+            rainbow-delimiters-nvim
           ];
 
           mkEntry = drv:
@@ -201,11 +202,11 @@
 
           nvimWrapped = pkgs.wrapNeovimUnstable
             neovim-unwrapped
-            (pkgs.neovimUtils.makeNeovimConfig {
+            {
               wrapRc = true;
               luaRcContent = luaRc;
               plugins = [ pkgs.vimPlugins.lazy-nvim ]; # others handled by Lazy
-            });
+            };
 
           appName = "nvim-flake"; # isolated cache: ~/.local/share/nvim-flake/…
 

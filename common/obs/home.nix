@@ -11,8 +11,17 @@
       pkgs.obs-cmd
     ];
 
-    my.hyprland.extraConfig = "
-      bind = CTRL SHIFT, F12, exec, obs-cmd recording toggle
-      ";
+    my.hyprland.extraSettings = [
+      {
+        bind = [
+          {
+            _args = [
+              "CTRL + SHIFT + F12"
+              (lib.generators.mkLuaInline ''hl.dsp.exec_cmd("obs-cmd recording toggle")'')
+            ];
+          }
+        ];
+      }
+    ];
   };
 }

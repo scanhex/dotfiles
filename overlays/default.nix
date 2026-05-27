@@ -40,6 +40,10 @@ in
       config.allowUnfree = true;
       overlays = [ clangToolsDarwinOverlay ];
     };
+
+    openldap = prev.openldap.overrideAttrs (_: {
+      doCheck = false;
+    });
 #      bash-completion = prev.bash-completion.overrideAttrs (old:
 #          {
 #          src = builtins.fetchurl {
