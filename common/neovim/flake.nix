@@ -19,17 +19,12 @@
 
       perSystem = (system:
         let
-          pkgs = import nixpkgs {
-            inherit system;
-            config.allowUnfree = true;
-          };
-          neovim-unwrapped = pkgs.neovim-unwrapped;
-
           clangToolsDarwinOverlay = final: prev:
             let
+              clang = prev.llvmPackages_22.clang;
               queryDrivers = prev.lib.concatStringsSep "," [
-                "/nix/store/*-clang-wrapper-*/bin/clang"
-                "/nix/store/*-clang-wrapper-*/bin/clang++"
+                (prev.lib.getExe clang)
+                (prev.lib.getExe' clang "clang++")
               ];
 
               wrapClangTools = clangTools:
@@ -42,21 +37,25 @@
                     fi
                   '';
                 });
+
             in
             if prev.stdenv.hostPlatform.isDarwin then
               {
-                llvmPackages_21 = prev.llvmPackages_21.overrideScope (_: llvmPrev: {
-                  clang-tools = wrapClangTools llvmPrev.clang-tools;
-                });
-                clang-tools = final.llvmPackages_21.clang-tools;
+                clang-tools = wrapClangTools prev.llvmPackages_22.clang-tools;
               }
             else
               { };
 
-          unstable = import nixpkgs-unstable {
+          pkgs = import nixpkgs {
             inherit system;
             config.allowUnfree = true;
             overlays = [ clangToolsDarwinOverlay ];
+          };
+          neovim-unwrapped = pkgs.neovim-unwrapped;
+
+          unstable = import nixpkgs-unstable {
+            inherit system;
+            config.allowUnfree = true;
           };
 
           lazyPlugins = with pkgs.vimPlugins; [
@@ -126,7 +125,7 @@
 
           extraTools = with pkgs; [
             ripgrep
-            unstable.clang
+            clang_22
             lua-language-server
             nil
             curl # neocmakelsp
@@ -172,7 +171,7 @@
 
             vim.deprecate   = function() end  -- silence warnings
 
-            clangd_path = "${unstable.clang-tools}/bin/clangd"
+            clangd_path = "${pkgs.clang-tools}/bin/clangd"
             codelldb_path   = "${pkgs.vscode-extensions.vadimcn.vscode-lldb}/share/vscode/extensions/vadimcn.vscode-lldb/adapter/codelldb"
             cp_library_nix  = "${cp-library}"
 

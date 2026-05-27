@@ -5,9 +5,10 @@ let
       { }
     else
       let
+        clang = prev.llvmPackages_22.clang;
         queryDrivers = prev.lib.concatStringsSep "," [
-          "/nix/store/*-clang-wrapper-*/bin/clang"
-          "/nix/store/*-clang-wrapper-*/bin/clang++"
+          (prev.lib.getExe clang)
+          (prev.lib.getExe' clang "clang++")
         ];
 
         wrapClangTools = clangTools:
@@ -20,13 +21,11 @@ let
               fi
             '';
           });
+
       in
       if prev.stdenv.hostPlatform.isDarwin then
         {
-          llvmPackages_21 = prev.llvmPackages_21.overrideScope (_: llvmPrev: {
-            clang-tools = wrapClangTools llvmPrev.clang-tools;
-          });
-          clang-tools = final.llvmPackages_21.clang-tools;
+          clang-tools = wrapClangTools prev.llvmPackages_22.clang-tools;
         }
       else
         { };
@@ -38,7 +37,6 @@ in
     unstable = import inputs.nixpkgs-unstable {
       inherit system;
       config.allowUnfree = true;
-      overlays = [ clangToolsDarwinOverlay ];
     };
 
     openldap = prev.openldap.overrideAttrs (_: {

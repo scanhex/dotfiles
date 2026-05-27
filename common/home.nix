@@ -12,8 +12,8 @@ in
       pkgs.bun
       pkgs.dnsutils
       pkgs.tmux
-      (pkgs.lib.hiPrio pkgs.unstable.clang_21)
-      pkgs.unstable.llvmPackages_21.bintools # for stack traces to work
+      (pkgs.lib.hiPrio pkgs.clang_22)
+      pkgs.llvmPackages_22.bintools # for stack traces to work
       pkgs.rustc
       pkgs.rustfmt
       pkgs.cargo
@@ -22,7 +22,7 @@ in
       pkgs.htop
       pkgs.jq
       pkgs.ninja
-      pkgs.unstable.llvmPackages_21.clang-tools
+      pkgs.clang-tools
       pkgs.nushell
       pkgs.bat
       pkgs.tig
