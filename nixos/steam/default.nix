@@ -37,6 +37,9 @@ in
       (pkgs.writeShellScriptBin "dota2" ''
         exec steam steam://rungameid/570
       '')
+      (pkgs.writeShellScriptBin "cs2" ''
+        exec steam steam://rungameid/730
+      '')
     ];
   };
 }

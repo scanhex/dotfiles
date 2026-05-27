@@ -358,6 +358,10 @@ in
       workspace = "5";
     }
     {
+      match.title = ".*Counter-Strike 2.*";
+      workspace = "5";
+    }
+    {
       match.title = ".*(Dead by Daylight|DeadByDaylight).*";
       workspace = "5";
     }

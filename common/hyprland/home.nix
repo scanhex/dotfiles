@@ -57,8 +57,7 @@ in
         profile = [
           {
             time = "06:00";
-            temperature = 6500;
-            gamma = 100;
+            identity = true;
           }
           {
             time = "19:00";
